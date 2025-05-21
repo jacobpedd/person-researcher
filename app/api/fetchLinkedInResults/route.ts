@@ -18,48 +18,42 @@ export async function POST(req: NextRequest) {
 
     console.log(`Received search query: ${searchQuery}`);
 
-    const result = await exa.searchAndContents(
-      searchQuery,
-      {
-        text: true,
-        type: "keyword",
-        category: "linkedin profile",
-        summary: {
-          query: 'Return the name and the headline of the LinkedIn profile owner. The headline should be the job title, company, and location as concisely as possible',
-          schema: {
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "title": "LinkedIn Profile Summary",
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-              },
-              "headline": {
-                "type": "string",
-              }
+    const result = await exa.searchAndContents(searchQuery, {
+      text: true,
+      type: "keyword",
+      numResults: 100,
+      category: "linkedin profile",
+      summary: {
+        query:
+          "Return the name and the headline of the LinkedIn profile owner. The headline should be the job title, company, and location as concisely as possible",
+        schema: {
+          $schema: "http://json-schema.org/draft-07/schema#",
+          title: "LinkedIn Profile Summary",
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
             },
-            "required": ["name", "headline"]
-          }
+            headline: {
+              type: "string",
+            },
+          },
+          required: ["name", "headline"],
         },
-      }
-    );
-
-    // Log search results for debugging
-    console.log("Search results before filtering:", result.results.map((profile: any) => ({
-      id: profile.id,
-      url: profile.url,
-      summary: profile.summary,
-      text: profile.text ? profile.text.substring(0, 100) + "..." : ""
-    })));
+      },
+    });
 
     // Filter for LinkedIn profile URLs and format the response
     const filteredResults = result.results
-      .filter((profile: any) => profile.url && profile.url.includes('linkedin.com/in/'))
+      .filter(
+        (profile: any) =>
+          profile.url && profile.url.includes("linkedin.com/in/")
+      )
       .map((profile: any) => {
         // Parse the summary to extract structured data
         let name = "";
         let headline = "";
-        
+
         try {
           const summaryData = JSON.parse(profile.summary);
           name = summaryData.name || "";
@@ -67,13 +61,13 @@ export async function POST(req: NextRequest) {
         } catch (error) {
           console.error("Error parsing summary JSON:", error);
         }
-        
+
         return {
           id: profile.id,
           url: profile.url,
           name: name,
           headline: headline,
-          text: profile.text
+          text: profile.text,
         };
       });
 

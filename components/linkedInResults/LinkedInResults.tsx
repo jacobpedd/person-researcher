@@ -11,7 +11,7 @@ export interface LinkedInResult {
 }
 
 interface LinkedInResultsProps {
-  results: LinkedInResult[];
+  results: LinkedInResult[] | null;
   selectedProfileId: string | null;
   onProfileSelect: (profileId: string) => void;
   isLoading: boolean;
@@ -41,7 +41,7 @@ const LinkedInResults: React.FC<LinkedInResultsProps> = ({
     return <LinkedInResultsSkeleton />;
   }
 
-  if (results.length === 0) {
+  if (!results || results.length === 0) {
     return null;
   }
 

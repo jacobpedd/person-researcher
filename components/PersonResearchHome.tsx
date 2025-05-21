@@ -7,7 +7,7 @@ export default function PersonResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingLinkedIn, setIsFetchingLinkedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [linkedInResults, setLinkedInResults] = useState<LinkedInResult[]>([]);
+  const [linkedInResults, setLinkedInResults] = useState<LinkedInResult[] | null>(null);
   const [linkedInProfile, setLinkedInProfile] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -65,7 +65,7 @@ export default function PersonResearcher() {
 
   // Clear search results
   const clearResults = () => {
-    setLinkedInResults([]);
+    setLinkedInResults(null);
     setLinkedInProfile(null);
   };
 
@@ -144,26 +144,41 @@ export default function PersonResearcher() {
           </div>
         </form>
         
-        {/* Results with Clear Button */}
-        {linkedInResults.length > 0 && (
+        {/* Results Area */}
+        {isFetchingLinkedIn ? (
+          <LinkedInResults 
+            results={[]}
+            selectedProfileId={null}
+            onProfileSelect={() => {}}
+            isLoading={true}
+          />
+        ) : linkedInResults !== null && (
           <div className="relative">
-            <LinkedInResults 
-              results={linkedInResults}
-              selectedProfileId={linkedInProfile}
-              onProfileSelect={(profileId) => setLinkedInProfile(profileId)}
-              isLoading={isFetchingLinkedIn}
-            />
-            <button
-              onClick={clearResults}
-              className="absolute top-0 right-0 text-sm text-red-500 hover:text-red-700"
-            >
-              Clear Results
-            </button>
+            {linkedInResults.length > 0 ? (
+              <>
+                <LinkedInResults 
+                  results={linkedInResults}
+                  selectedProfileId={linkedInProfile}
+                  onProfileSelect={(profileId) => setLinkedInProfile(profileId)}
+                  isLoading={false}
+                />
+                <button
+                  onClick={clearResults}
+                  className="absolute top-0 right-0 text-sm text-red-500 hover:text-red-700"
+                >
+                  Clear Results
+                </button>
+              </>
+            ) : (
+              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
+                <p className="text-gray-700 text-center">No LinkedIn profiles found for your search. Try another query.</p>
+              </div>
+            )}
           </div>
         )}
         
         {/* Research Button - Only shown when there are results */}
-        {linkedInResults.length > 0 && (
+        {linkedInResults !== null && linkedInResults.length > 0 && (
           <form onSubmit={handleResearch}>
             <button
               type="submit"
