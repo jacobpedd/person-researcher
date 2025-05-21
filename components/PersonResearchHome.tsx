@@ -1,14 +1,7 @@
 "use client";
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
-import LinkedInResults from "./linkedInResults/LinkedInResults";
-
-interface LinkedInResult {
-  id: string;
-  name: string;
-  headline: string;
-  profileUrl: string;
-}
+import LinkedInResults, { LinkedInResult } from "./linkedInResults/LinkedInResults";
 
 export default function PersonResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -18,18 +11,13 @@ export default function PersonResearcher() {
   const [linkedInProfile, setLinkedInProfile] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Add debounce effect for searching
-  useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      if (searchQuery.trim()) {
-        handleSearch();
-      }
-    }, 500); // 500ms debounce
-
-    return () => {
-      clearTimeout(debounceTimeout);
-    };
-  }, [searchQuery]);
+  // Handle form submission for search
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      handleSearch();
+    }
+  };
 
   // Search for LinkedIn profiles
   const handleSearch = async () => {
@@ -46,20 +34,26 @@ export default function PersonResearcher() {
     try {
       console.log(`Searching for LinkedIn profiles with query: ${searchQuery}`);
       
-      // Temporary: Mock API response until the endpoint is created
-      // In a real implementation, this would be:
-      // const response = await fetch(`/api/searchlinkedin?query=${encodeURIComponent(searchQuery)}`);
+      // Make request to the new API endpoint
+      const response = await fetch('/api/fetchLinkedInResults', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ searchQuery }),
+      });
       
-      // Mock data for development
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockProfiles: LinkedInResult[] = [
-        { id: "1", name: "John Doe", headline: "CEO at Example Inc", profileUrl: "https://linkedin.com/in/johndoe" },
-        { id: "2", name: "Jane Smith", headline: "CTO at Tech Company", profileUrl: "https://linkedin.com/in/janesmith" },
-        { id: "3", name: "Alice Johnson", headline: "Product Manager at Startup", profileUrl: "https://linkedin.com/in/alicejohnson" }
-      ];
+      if (!response.ok) {
+        throw new Error('Failed to fetch LinkedIn profiles');
+      }
       
-      console.log(`Found ${mockProfiles.length} candidate profiles`);
-      setLinkedInResults(mockProfiles);
+      const data = await response.json();
+      
+      // API now returns filtered and formatted results
+      const profiles: LinkedInResult[] = data.results;
+      
+      console.log(`Found ${profiles.length} LinkedIn profiles`);
+      setLinkedInResults(profiles);
       
     } catch (error) {
       console.error('Error fetching LinkedIn profiles:', error);
@@ -67,6 +61,12 @@ export default function PersonResearcher() {
     } finally {
       setIsFetchingLinkedIn(false);
     }
+  };
+
+  // Clear search results
+  const clearResults = () => {
+    setLinkedInResults([]);
+    setLinkedInProfile(null);
   };
 
   // Main Research Function
@@ -86,8 +86,9 @@ export default function PersonResearcher() {
       return;
     }
 
-    console.log(`Researching profile: ${selectedProfile.name} (${selectedProfile.headline})`);
-    console.log(`Profile URL: ${selectedProfile.profileUrl}`);
+    console.log(`Researching profile: ${selectedProfile.name}`);
+    console.log(`Profile headline: ${selectedProfile.headline}`);
+    console.log(`Profile URL: ${selectedProfile.url}`);
 
     setIsGenerating(true);
     setErrors({});
@@ -121,34 +122,60 @@ export default function PersonResearcher() {
       </p>
 
       <div className="space-y-6 mb-20">
-        <div className="w-full">
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Enter Person Query (e.g., Will Bryk, Exa CEO)"
-            className="w-full bg-white p-3 border box-border outline-none rounded-sm ring-2 ring-brand-default resize-none opacity-0 animate-fade-up [animation-delay:600ms]"
-            disabled={isFetchingLinkedIn}
-          />
-        </div>
-        
-        <LinkedInResults 
-          results={linkedInResults}
-          selectedProfileId={linkedInProfile}
-          onProfileSelect={(profileId) => setLinkedInProfile(profileId)}
-          isLoading={isFetchingLinkedIn}
-        />
-        
-        <form onSubmit={handleResearch}>
-          <button
-            type="submit"
-            className={`w-full text-white font-semibold px-2 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:800ms] min-h-[50px] ${
-              isGenerating ? 'bg-gray-400' : linkedInProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
-            } transition-colors`}
-            disabled={isGenerating || !linkedInProfile}
-          >
-            {isGenerating ? 'Researching...' : 'Research Person'}
-          </button>
+        {/* Search Form */}
+        <form onSubmit={handleSearchSubmit} className="w-full">
+          <div className="flex gap-2">
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Enter Person Query (e.g., Will Bryk, Exa CEO)"
+              className="flex-grow bg-white p-3 border box-border outline-none rounded-sm ring-2 ring-brand-default resize-none opacity-0 animate-fade-up [animation-delay:600ms]"
+              disabled={isFetchingLinkedIn}
+            />
+            <button
+              type="submit"
+              className={`text-white font-semibold px-4 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:600ms] ${
+                isFetchingLinkedIn ? 'bg-gray-400' : 'bg-brand-default'
+              }`}
+              disabled={isFetchingLinkedIn || !searchQuery.trim()}
+            >
+              {isFetchingLinkedIn ? 'Searching...' : 'Search'}
+            </button>
+          </div>
         </form>
+        
+        {/* Results with Clear Button */}
+        {linkedInResults.length > 0 && (
+          <div className="relative">
+            <LinkedInResults 
+              results={linkedInResults}
+              selectedProfileId={linkedInProfile}
+              onProfileSelect={(profileId) => setLinkedInProfile(profileId)}
+              isLoading={isFetchingLinkedIn}
+            />
+            <button
+              onClick={clearResults}
+              className="absolute top-0 right-0 text-sm text-red-500 hover:text-red-700"
+            >
+              Clear Results
+            </button>
+          </div>
+        )}
+        
+        {/* Research Button - Only shown when there are results */}
+        {linkedInResults.length > 0 && (
+          <form onSubmit={handleResearch}>
+            <button
+              type="submit"
+              className={`w-full text-white font-semibold px-2 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:800ms] min-h-[50px] ${
+                isGenerating ? 'bg-gray-400' : linkedInProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
+              } transition-colors`}
+              disabled={isGenerating || !linkedInProfile}
+            >
+              {isGenerating ? 'Researching...' : 'Research Person'}
+            </button>
+          </form>
+        )}
 
         <div className="flex items-center justify-end gap-2 sm:gap-3 pt-4 opacity-0 animate-fade-up [animation-delay:1000ms]">
           <span className="text-gray-800">Powered by</span>

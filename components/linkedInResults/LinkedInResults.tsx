@@ -1,11 +1,13 @@
 import React from 'react';
 import { Skeleton } from '../ui/skeleton';
+import Link from 'next/link';
 
-interface LinkedInResult {
+export interface LinkedInResult {
   id: string;
   name: string;
   headline: string;
-  profileUrl: string;
+  url: string;
+  text: string;
 }
 
 interface LinkedInResultsProps {
@@ -47,16 +49,27 @@ const LinkedInResults: React.FC<LinkedInResultsProps> = ({
     <div className="mt-4 animate-fade-up">
       <h3 className="text-lg font-medium mb-3">Select a LinkedIn Profile:</h3>
       <div className="space-y-3">
-        {results.map((profile) => (
+        {results.slice(0, 3).map((profile) => (
           <div 
             key={profile.id} 
-            className={`p-3 border rounded-sm cursor-pointer bg-white shadow-sm ${
+            className={`p-3 border rounded-sm cursor-pointer bg-white shadow-sm relative ${
               selectedProfileId === profile.id ? 'border-brand-default bg-brand-50' : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => onProfileSelect(profile.id)}
           >
             <div className="font-medium">{profile.name}</div>
             <div className="text-sm text-gray-600">{profile.headline}</div>
+            <div className="absolute top-3 right-3">
+              <Link 
+                href={profile.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xs text-blue-600 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                LinkedIn Profile ↗
+              </Link>
+            </div>
           </div>
         ))}
       </div>
