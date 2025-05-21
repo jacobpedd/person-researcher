@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const result = await exa.searchAndContents(searchQuery, {
       text: true,
       type: "keyword",
-      numResults: 100,
+      numResults: 10,
       category: "linkedin profile",
       summary: {
         query:
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
           name: name,
           headline: headline,
           text: profile.text,
+          source: "linkedin",
         };
       });
 

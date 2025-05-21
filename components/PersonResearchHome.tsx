@@ -2,13 +2,26 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import LinkedInResults, { LinkedInResult } from "./linkedInResults/LinkedInResults";
+import WikipediaResults from "./wikipediaResults/WikipediaResults";
+import { Tabs } from "./ui/tabs";
+
+export interface ProfileResult {
+  id: string;
+  name: string;
+  headline: string;
+  url: string;
+  text: string;
+  source: "linkedin" | "wikipedia";
+}
 
 export default function PersonResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isFetchingLinkedIn, setIsFetchingLinkedIn] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [linkedInResults, setLinkedInResults] = useState<LinkedInResult[] | null>(null);
-  const [linkedInProfile, setLinkedInProfile] = useState<string | null>(null);
+  const [wikipediaResults, setWikipediaResults] = useState<ProfileResult[] | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"linkedin" | "wikipedia">("linkedin");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Handle form submission for search
@@ -19,67 +32,90 @@ export default function PersonResearcher() {
     }
   };
 
-  // Search for LinkedIn profiles
+  // Search for profiles (both LinkedIn and Wikipedia)
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setErrors({ form: "Please enter a search query" });
       return;
     }
 
-    setIsFetchingLinkedIn(true);
+    setIsSearching(true);
     setErrors({});
     setLinkedInResults([]);
-    setLinkedInProfile(null);
+    setWikipediaResults([]);
+    setSelectedProfileId(null);
 
     try {
-      console.log(`Searching for LinkedIn profiles with query: ${searchQuery}`);
+      console.log(`Searching for profiles with query: ${searchQuery}`);
       
-      // Make request to the new API endpoint
-      const response = await fetch('/api/fetchLinkedInResults', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ searchQuery }),
-      });
+      // Fetch both LinkedIn and Wikipedia profiles in parallel
+      const [linkedInResponse, wikipediaResponse] = await Promise.all([
+        fetch('/api/fetchLinkedInResults', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ searchQuery }),
+        }),
+        fetch('/api/fetchWikipedia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ searchQuery }),
+        })
+      ]);
       
-      if (!response.ok) {
+      if (!linkedInResponse.ok) {
         throw new Error('Failed to fetch LinkedIn profiles');
       }
       
-      const data = await response.json();
+      if (!wikipediaResponse.ok) {
+        throw new Error('Failed to fetch Wikipedia articles');
+      }
       
-      // API now returns filtered and formatted results
-      const profiles: LinkedInResult[] = data.results;
+      const linkedInData = await linkedInResponse.json();
+      const wikipediaData = await wikipediaResponse.json();
       
-      console.log(`Found ${profiles.length} LinkedIn profiles`);
-      setLinkedInResults(profiles);
+      console.log(`Found ${linkedInData.results.length} LinkedIn profiles and ${wikipediaData.results.length} Wikipedia articles`);
+      
+      setLinkedInResults(linkedInData.results);
+      setWikipediaResults(wikipediaData.results);
+      
+      // If one tab has no results but the other does, automatically switch to the tab with results
+      if (linkedInData.results.length === 0 && wikipediaData.results.length > 0) {
+        setActiveTab("wikipedia");
+      } else if (wikipediaData.results.length === 0 && linkedInData.results.length > 0) {
+        setActiveTab("linkedin");
+      }
       
     } catch (error) {
-      console.error('Error fetching LinkedIn profiles:', error);
-      setErrors({ form: "Error fetching LinkedIn profiles. Please try again." });
+      console.error('Error fetching profiles:', error);
+      setErrors({ form: "Error fetching profiles. Please try again." });
     } finally {
-      setIsFetchingLinkedIn(false);
+      setIsSearching(false);
     }
   };
 
   // Clear search results
   const clearResults = () => {
     setLinkedInResults(null);
-    setLinkedInProfile(null);
+    setWikipediaResults(null);
+    setSelectedProfileId(null);
   };
 
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!linkedInProfile) {
-      setErrors({ form: "Please select a LinkedIn profile first" });
+    if (!selectedProfileId) {
+      setErrors({ form: "Please select a profile first" });
       return;
     }
 
-    // Find the selected profile
-    const selectedProfile = linkedInResults.find(profile => profile.id === linkedInProfile);
+    // Find the selected profile based on active tab
+    let selectedProfile;
+    if (activeTab === "linkedin") {
+      selectedProfile = linkedInResults?.find(profile => profile.id === selectedProfileId);
+    } else {
+      selectedProfile = wikipediaResults?.find(profile => profile.id === selectedProfileId);
+    }
     
     if (!selectedProfile) {
       setErrors({ form: "Selected profile not found. Please try again." });
@@ -89,13 +125,15 @@ export default function PersonResearcher() {
     console.log(`Researching profile: ${selectedProfile.name}`);
     console.log(`Profile headline: ${selectedProfile.headline}`);
     console.log(`Profile URL: ${selectedProfile.url}`);
+    console.log(`Profile source: ${activeTab}`);
 
     setIsGenerating(true);
     setErrors({});
-    setLinkedInResults([]);
+    setLinkedInResults(null);
+    setWikipediaResults(null);
 
     try {
-      // Run all API calls in parallel with the selected LinkedIn profile
+      // Run all API calls in parallel with the selected profile
       const promises = [
         new Promise(resolve => setTimeout(resolve, 1000)), // Simulate API call
       ];
@@ -130,62 +168,106 @@ export default function PersonResearcher() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Enter Person Query (e.g., Will Bryk, Exa CEO)"
               className="flex-grow bg-white p-3 border box-border outline-none rounded-sm ring-2 ring-brand-default resize-none opacity-0 animate-fade-up [animation-delay:600ms]"
-              disabled={isFetchingLinkedIn}
+              disabled={isSearching}
             />
             <button
               type="submit"
               className={`text-white font-semibold px-4 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:600ms] ${
-                isFetchingLinkedIn ? 'bg-gray-400' : 'bg-brand-default'
+                isSearching ? 'bg-gray-400' : 'bg-brand-default'
               }`}
-              disabled={isFetchingLinkedIn || !searchQuery.trim()}
+              disabled={isSearching || !searchQuery.trim()}
             >
-              {isFetchingLinkedIn ? 'Searching...' : 'Search'}
+              {isSearching ? 'Searching...' : 'Search'}
             </button>
           </div>
         </form>
         
         {/* Results Area */}
-        {isFetchingLinkedIn ? (
-          <LinkedInResults 
-            results={[]}
-            selectedProfileId={null}
-            onProfileSelect={() => {}}
-            isLoading={true}
-          />
-        ) : linkedInResults !== null && (
+        {(linkedInResults !== null || wikipediaResults !== null || isSearching) && (
           <div className="relative">
-            {linkedInResults.length > 0 ? (
-              <>
-                <LinkedInResults 
-                  results={linkedInResults}
-                  selectedProfileId={linkedInProfile}
-                  onProfileSelect={(profileId) => setLinkedInProfile(profileId)}
-                  isLoading={false}
-                />
+            {/* Tab Navigation */}
+            <div className="flex justify-between items-center">
+              <Tabs 
+                activeTab={activeTab}
+                tabs={[
+                  { 
+                    id: "linkedin", 
+                    label: isSearching ? "LinkedIn (Loading...)" : "LinkedIn", 
+                    count: isSearching ? undefined : linkedInResults?.length || 0 
+                  },
+                  { 
+                    id: "wikipedia", 
+                    label: isSearching ? "Wikipedia (Loading...)" : "Wikipedia", 
+                    count: isSearching ? undefined : wikipediaResults?.length || 0 
+                  }
+                ]}
+                onTabChange={(tabId) => setActiveTab(tabId as "linkedin" | "wikipedia")}
+              />
+              {!isSearching && (
                 <button
                   onClick={clearResults}
-                  className="absolute top-0 right-0 text-sm text-red-500 hover:text-red-700"
+                  className="text-sm text-red-500 hover:text-red-700"
                 >
                   Clear Results
                 </button>
-              </>
+              )}
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === "linkedin" ? (
+              isSearching ? (
+                <LinkedInResults 
+                  results={[]}
+                  selectedProfileId={null}
+                  onProfileSelect={() => {}}
+                  isLoading={true}
+                />
+              ) : linkedInResults && linkedInResults.length > 0 ? (
+                <LinkedInResults 
+                  results={linkedInResults}
+                  selectedProfileId={selectedProfileId}
+                  onProfileSelect={(profileId) => setSelectedProfileId(profileId)}
+                  isLoading={false}
+                />
+              ) : linkedInResults !== null && (
+                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
+                  <p className="text-gray-700 text-center">No LinkedIn profiles found for your search. Try another query or check the Wikipedia tab.</p>
+                </div>
+              )
             ) : (
-              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
-                <p className="text-gray-700 text-center">No LinkedIn profiles found for your search. Try another query.</p>
-              </div>
+              isSearching ? (
+                <WikipediaResults 
+                  results={[]}
+                  selectedProfileId={null}
+                  onProfileSelect={() => {}}
+                  isLoading={true}
+                />
+              ) : wikipediaResults && wikipediaResults.length > 0 ? (
+                <WikipediaResults 
+                  results={wikipediaResults}
+                  selectedProfileId={selectedProfileId}
+                  onProfileSelect={(profileId) => setSelectedProfileId(profileId)}
+                  isLoading={false}
+                />
+              ) : wikipediaResults !== null && (
+                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
+                  <p className="text-gray-700 text-center">No Wikipedia articles found for your search. Try another query or check the LinkedIn tab.</p>
+                </div>
+              )
             )}
           </div>
         )}
         
         {/* Research Button - Only shown when there are results */}
-        {linkedInResults !== null && linkedInResults.length > 0 && (
+        {((linkedInResults !== null && linkedInResults.length > 0) || 
+          (wikipediaResults !== null && wikipediaResults.length > 0)) && (
           <form onSubmit={handleResearch}>
             <button
               type="submit"
               className={`w-full text-white font-semibold px-2 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:800ms] min-h-[50px] ${
-                isGenerating ? 'bg-gray-400' : linkedInProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
+                isGenerating ? 'bg-gray-400' : selectedProfileId ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
               } transition-colors`}
-              disabled={isGenerating || !linkedInProfile}
+              disabled={isGenerating || !selectedProfileId}
             >
               {isGenerating ? 'Researching...' : 'Research Person'}
             </button>
