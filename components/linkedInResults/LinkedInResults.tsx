@@ -1,19 +1,12 @@
 import React from 'react';
 import { Skeleton } from '../ui/skeleton';
 import Link from 'next/link';
-
-export interface LinkedInResult {
-  id: string;
-  name: string;
-  headline: string;
-  url: string;
-  text: string;
-}
+import { ProfileResult } from '../PersonResearchHome';
 
 interface LinkedInResultsProps {
-  results: LinkedInResult[] | null;
-  selectedProfileId: string | null;
-  onProfileSelect: (profileId: string) => void;
+  results: ProfileResult[] | null;
+  selectedProfile: ProfileResult | null;
+  onProfileSelect: (profile: ProfileResult) => void;
   isLoading: boolean;
 }
 
@@ -33,7 +26,7 @@ const LinkedInResultsSkeleton = () => (
 
 const LinkedInResults: React.FC<LinkedInResultsProps> = ({ 
   results, 
-  selectedProfileId, 
+  selectedProfile, 
   onProfileSelect,
   isLoading
 }) => {
@@ -53,9 +46,9 @@ const LinkedInResults: React.FC<LinkedInResultsProps> = ({
           <div 
             key={profile.id} 
             className={`p-3 border rounded-sm cursor-pointer bg-white shadow-sm relative ${
-              selectedProfileId === profile.id ? 'border-brand-default bg-brand-50' : 'border-gray-200 hover:border-gray-300'
+              selectedProfile?.id === profile.id ? 'border-brand-default bg-brand-50' : 'border-gray-200 hover:border-gray-300'
             }`}
-            onClick={() => onProfileSelect(profile.id)}
+            onClick={() => onProfileSelect(profile)}
           >
             <div className="font-medium">{profile.name}</div>
             <div className="text-sm text-gray-600">{profile.headline}</div>

@@ -5,8 +5,8 @@ import { ProfileResult } from '../PersonResearchHome';
 
 interface WikipediaResultsProps {
   results: ProfileResult[] | null;
-  selectedProfileId: string | null;
-  onProfileSelect: (profileId: string) => void;
+  selectedProfile: ProfileResult | null;
+  onProfileSelect: (profile: ProfileResult) => void;
   isLoading: boolean;
 }
 
@@ -26,7 +26,7 @@ const WikipediaResultsSkeleton = () => (
 
 const WikipediaResults: React.FC<WikipediaResultsProps> = ({ 
   results, 
-  selectedProfileId, 
+  selectedProfile, 
   onProfileSelect,
   isLoading
 }) => {
@@ -46,9 +46,9 @@ const WikipediaResults: React.FC<WikipediaResultsProps> = ({
           <div 
             key={profile.id} 
             className={`p-3 border rounded-sm cursor-pointer bg-white shadow-sm relative ${
-              selectedProfileId === profile.id ? 'border-brand-default bg-brand-50' : 'border-gray-200 hover:border-gray-300'
+              selectedProfile?.id === profile.id ? 'border-brand-default bg-brand-50' : 'border-gray-200 hover:border-gray-300'
             }`}
-            onClick={() => onProfileSelect(profile.id)}
+            onClick={() => onProfileSelect(profile)}
           >
             <div className="font-medium">{profile.name}</div>
             <div className="text-sm text-gray-600">{profile.headline}</div>

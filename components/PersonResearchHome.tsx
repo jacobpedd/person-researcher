@@ -1,7 +1,7 @@
 "use client";
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
-import LinkedInResults, { LinkedInResult } from "./linkedInResults/LinkedInResults";
+import LinkedInResults from "./linkedInResults/LinkedInResults";
 import WikipediaResults from "./wikipediaResults/WikipediaResults";
 import { Tabs } from "./ui/tabs";
 
@@ -18,9 +18,9 @@ export default function PersonResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [linkedInResults, setLinkedInResults] = useState<LinkedInResult[] | null>(null);
+  const [linkedInResults, setLinkedInResults] = useState<ProfileResult[] | null>(null);
   const [wikipediaResults, setWikipediaResults] = useState<ProfileResult[] | null>(null);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<ProfileResult | null>(null);
   const [activeTab, setActiveTab] = useState<"linkedin" | "wikipedia">("linkedin");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,7 +43,7 @@ export default function PersonResearcher() {
     setErrors({});
     setLinkedInResults([]);
     setWikipediaResults([]);
-    setSelectedProfileId(null);
+    setSelectedProfile(null);
 
     try {
       console.log(`Searching for profiles with query: ${searchQuery}`);
@@ -97,35 +97,22 @@ export default function PersonResearcher() {
   const clearResults = () => {
     setLinkedInResults(null);
     setWikipediaResults(null);
-    setSelectedProfileId(null);
+    setSelectedProfile(null);
   };
 
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!selectedProfileId) {
-      setErrors({ form: "Please select a profile first" });
-      return;
-    }
-
-    // Find the selected profile based on active tab
-    let selectedProfile;
-    if (activeTab === "linkedin") {
-      selectedProfile = linkedInResults?.find(profile => profile.id === selectedProfileId);
-    } else {
-      selectedProfile = wikipediaResults?.find(profile => profile.id === selectedProfileId);
-    }
-    
     if (!selectedProfile) {
-      setErrors({ form: "Selected profile not found. Please try again." });
+      setErrors({ form: "Please select a profile first" });
       return;
     }
 
     console.log(`Researching profile: ${selectedProfile.name}`);
     console.log(`Profile headline: ${selectedProfile.headline}`);
     console.log(`Profile URL: ${selectedProfile.url}`);
-    console.log(`Profile source: ${activeTab}`);
+    console.log(`Profile source: ${selectedProfile.source}`);
 
     setIsGenerating(true);
     setErrors({});
@@ -218,15 +205,15 @@ export default function PersonResearcher() {
               isSearching ? (
                 <LinkedInResults 
                   results={[]}
-                  selectedProfileId={null}
+                  selectedProfile={null}
                   onProfileSelect={() => {}}
                   isLoading={true}
                 />
               ) : linkedInResults && linkedInResults.length > 0 ? (
                 <LinkedInResults 
                   results={linkedInResults}
-                  selectedProfileId={selectedProfileId}
-                  onProfileSelect={(profileId) => setSelectedProfileId(profileId)}
+                  selectedProfile={selectedProfile}
+                  onProfileSelect={(profile) => setSelectedProfile(profile)}
                   isLoading={false}
                 />
               ) : linkedInResults !== null && (
@@ -238,15 +225,15 @@ export default function PersonResearcher() {
               isSearching ? (
                 <WikipediaResults 
                   results={[]}
-                  selectedProfileId={null}
+                  selectedProfile={null}
                   onProfileSelect={() => {}}
                   isLoading={true}
                 />
               ) : wikipediaResults && wikipediaResults.length > 0 ? (
                 <WikipediaResults 
                   results={wikipediaResults}
-                  selectedProfileId={selectedProfileId}
-                  onProfileSelect={(profileId) => setSelectedProfileId(profileId)}
+                  selectedProfile={selectedProfile}
+                  onProfileSelect={(profile) => setSelectedProfile(profile)}
                   isLoading={false}
                 />
               ) : wikipediaResults !== null && (
@@ -265,9 +252,9 @@ export default function PersonResearcher() {
             <button
               type="submit"
               className={`w-full text-white font-semibold px-2 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:800ms] min-h-[50px] ${
-                isGenerating ? 'bg-gray-400' : selectedProfileId ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
+                isGenerating ? 'bg-gray-400' : selectedProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
               } transition-colors`}
-              disabled={isGenerating || !selectedProfileId}
+              disabled={isGenerating || !selectedProfile}
             >
               {isGenerating ? 'Researching...' : 'Research Person'}
             </button>
