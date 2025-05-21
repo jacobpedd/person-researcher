@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import Link from 'next/link';
 import { ProfileResult } from '../PersonResearchHome';
 
-interface LinkedInResultsProps {
+interface ProfileResultsListProps {
   results: ProfileResult[] | null;
   selectedProfile: ProfileResult | null;
   onProfileSelect: (profile: ProfileResult) => void;
   isLoading: boolean;
+  source: "linkedin" | "wikipedia";
 }
 
-const LinkedInResultsSkeleton = () => (
+const ProfileResultsSkeleton = ({ source }: { source: "linkedin" | "wikipedia" }) => (
   <div className="mt-4 animate-fade-up">
-    <h3 className="text-lg font-medium mb-4">Fetching LinkedIn Profiles...</h3>
+    <h3 className="text-lg font-medium mb-4">Fetching {source === "linkedin" ? "LinkedIn Profiles" : "Wikipedia Articles"}...</h3>
     <div className="space-y-3">
       {[1, 2, 3].map((i) => (
         <div key={i} className="p-3 border border-gray-200 rounded-sm bg-white shadow-sm">
@@ -24,25 +25,33 @@ const LinkedInResultsSkeleton = () => (
   </div>
 );
 
-const LinkedInResults: React.FC<LinkedInResultsProps> = ({ 
+const ProfileResultsList: React.FC<ProfileResultsListProps> = ({ 
   results, 
   selectedProfile, 
   onProfileSelect,
-  isLoading
+  isLoading,
+  source
 }) => {
+  const [showAll, setShowAll] = useState(false);
+  
   if (isLoading) {
-    return <LinkedInResultsSkeleton />;
+    return <ProfileResultsSkeleton source={source} />;
   }
 
   if (!results || results.length === 0) {
     return null;
   }
+  
+  const displayResults = showAll ? results : results.slice(0, 3);
+  const hasMoreResults = results.length > 3;
+  const sourceLabel = source === "linkedin" ? "LinkedIn Profile" : "Wikipedia Article";
+  const headerText = source === "linkedin" ? "Select a LinkedIn Profile:" : "Select a Wikipedia Article:";
 
   return (
     <div className="mt-4 animate-fade-up">
-      <h3 className="text-lg font-medium mb-3">Select a LinkedIn Profile:</h3>
+      <h3 className="text-lg font-medium mb-3">{headerText}</h3>
       <div className="space-y-3">
-        {results.slice(0, 3).map((profile) => (
+        {displayResults.map((profile) => (
           <div 
             key={profile.id} 
             className={`p-3 border rounded-sm cursor-pointer bg-white shadow-sm relative ${
@@ -60,14 +69,23 @@ const LinkedInResults: React.FC<LinkedInResultsProps> = ({
                 className="text-xs text-blue-600 hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
-                LinkedIn Profile ↗
+                {sourceLabel} ↗
               </Link>
             </div>
           </div>
         ))}
+        
+        {hasMoreResults && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 text-center border border-gray-200 rounded-sm bg-gray-50 hover:bg-gray-100 transition-colors"
+          >
+            {showAll ? "Show Less" : "Show More Results"}
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
-export default LinkedInResults;
+export default ProfileResultsList;

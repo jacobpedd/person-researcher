@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
           text: article.text,
           source: "wikipedia"
         };
-      });
+      })
+      // Filter out results where name or headline is missing
+      .filter((article) => article.name && article.headline);
 
     console.log(`Filtered to ${filteredResults.length} Wikipedia articles`);
     return NextResponse.json({ results: filteredResults });

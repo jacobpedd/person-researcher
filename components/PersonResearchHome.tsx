@@ -1,9 +1,7 @@
 "use client";
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
-import LinkedInResults from "./linkedInResults/LinkedInResults";
-import WikipediaResults from "./wikipediaResults/WikipediaResults";
-import { Tabs } from "./ui/tabs";
+import ProfileResults from "./profileResults/ProfileResults";
 
 export interface ProfileResult {
   id: string;
@@ -171,78 +169,16 @@ export default function PersonResearcher() {
         
         {/* Results Area */}
         {(linkedInResults !== null || wikipediaResults !== null || isSearching) && (
-          <div className="relative">
-            {/* Tab Navigation */}
-            <div className="flex justify-between items-center">
-              <Tabs 
-                activeTab={activeTab}
-                tabs={[
-                  { 
-                    id: "linkedin", 
-                    label: isSearching ? "LinkedIn (Loading...)" : "LinkedIn", 
-                    count: isSearching ? undefined : linkedInResults?.length || 0 
-                  },
-                  { 
-                    id: "wikipedia", 
-                    label: isSearching ? "Wikipedia (Loading...)" : "Wikipedia", 
-                    count: isSearching ? undefined : wikipediaResults?.length || 0 
-                  }
-                ]}
-                onTabChange={(tabId) => setActiveTab(tabId as "linkedin" | "wikipedia")}
-              />
-              {!isSearching && (
-                <button
-                  onClick={clearResults}
-                  className="text-sm text-red-500 hover:text-red-700"
-                >
-                  Clear Results
-                </button>
-              )}
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === "linkedin" ? (
-              isSearching ? (
-                <LinkedInResults 
-                  results={[]}
-                  selectedProfile={null}
-                  onProfileSelect={() => {}}
-                  isLoading={true}
-                />
-              ) : linkedInResults && linkedInResults.length > 0 ? (
-                <LinkedInResults 
-                  results={linkedInResults}
-                  selectedProfile={selectedProfile}
-                  onProfileSelect={(profile) => setSelectedProfile(profile)}
-                  isLoading={false}
-                />
-              ) : linkedInResults !== null && (
-                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
-                  <p className="text-gray-700 text-center">No LinkedIn profiles found for your search. Try another query or check the Wikipedia tab.</p>
-                </div>
-              )
-            ) : (
-              isSearching ? (
-                <WikipediaResults 
-                  results={[]}
-                  selectedProfile={null}
-                  onProfileSelect={() => {}}
-                  isLoading={true}
-                />
-              ) : wikipediaResults && wikipediaResults.length > 0 ? (
-                <WikipediaResults 
-                  results={wikipediaResults}
-                  selectedProfile={selectedProfile}
-                  onProfileSelect={(profile) => setSelectedProfile(profile)}
-                  isLoading={false}
-                />
-              ) : wikipediaResults !== null && (
-                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
-                  <p className="text-gray-700 text-center">No Wikipedia articles found for your search. Try another query or check the LinkedIn tab.</p>
-                </div>
-              )
-            )}
-          </div>
+          <ProfileResults
+            linkedInResults={linkedInResults}
+            wikipediaResults={wikipediaResults}
+            selectedProfile={selectedProfile}
+            onProfileSelect={setSelectedProfile}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isSearching={isSearching}
+            onClearResults={clearResults}
+          />
         )}
         
         {/* Research Button - Only shown when there are results */}

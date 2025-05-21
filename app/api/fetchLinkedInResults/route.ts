@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
           text: profile.text,
           source: "linkedin",
         };
-      });
+      })
+      // Filter out results where name or headline is missing
+      .filter((profile) => profile.name && profile.headline);
 
     console.log(`Filtered to ${filteredResults.length} LinkedIn profiles`);
     return NextResponse.json({ results: filteredResults });
