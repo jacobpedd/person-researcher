@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         type: "keyword",
         category: "linkedin profile",
         summary: {
+          query: 'Return the name and the headline of the LinkedIn profile owner. The headline should be the job title, company, and location as concisely as possible',
           schema: {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": "LinkedIn Profile Summary",
@@ -32,11 +33,9 @@ export async function POST(req: NextRequest) {
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Full name of the LinkedIn profile owner"
               },
               "headline": {
                 "type": "string",
-                "description": "Current profession headline and location (one word) of the profile owner in as few words as possible"
               }
             },
             "required": ["name", "headline"]
