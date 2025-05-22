@@ -16,8 +16,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`Received search query: ${searchQuery}`);
-
     const result = await exa.searchAndContents(searchQuery, {
       text: true,
       type: "keyword",

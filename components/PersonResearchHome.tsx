@@ -2,6 +2,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import ProfileResults from "./profileResults/ProfileResults";
+import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
   id: string;
@@ -21,6 +22,12 @@ export default function PersonResearcher() {
   const [selectedProfile, setSelectedProfile] = useState<ProfileResult | null>(null);
   const [activeTab, setActiveTab] = useState<"linkedin" | "wikipedia">("linkedin");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [exaSearchResults, setExaSearchResults] = useState<SearchResponse<{
+    text: true;
+    type: string;
+    numResults: number;
+    summary: true;
+  }> | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -114,13 +121,21 @@ export default function PersonResearcher() {
 
     setIsGenerating(true);
     setErrors({});
-    setLinkedInResults(null);
-    setWikipediaResults(null);
 
     try {
       // Run all API calls in parallel with the selected profile
       const promises = [
-        new Promise(resolve => setTimeout(resolve, 1000)), // Simulate API call
+        fetch('/api/fetchExaSearch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ searchQuery: selectedProfile.name }),
+        }).then(response => {
+          if (!response.ok) throw new Error('Failed to fetch Exa search results');
+          return response.json();
+        }).then(data => {
+          setExaSearchResults(data.results);
+          console.log('Exa search results loaded:', data.results);
+        })
       ];
 
       await Promise.allSettled(promises);
@@ -215,6 +230,20 @@ export default function PersonResearcher() {
           {message}
         </div>
       ))}
+
+      {(isGenerating || exaSearchResults) && (
+        <div className="mt-6 p-4 bg-gray-100 rounded overflow-auto max-h-[500px]">
+          <h2 className="text-xl font-semibold mb-2">Exa Search Results</h2>
+          {isGenerating ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+              <span className="ml-2">Loading results...</span>
+            </div>
+          ) : (
+            <pre className="text-xs">{JSON.stringify(exaSearchResults, null, 2)}</pre>
+          )}
+        </div>
+      )}
 
       <div className="flex-grow"></div>
         <footer className="fixed bottom-0 left-0 right-0 w-full py-4 bg-secondary-default border-t opacity-0 animate-fade-up [animation-delay:1200ms]">
