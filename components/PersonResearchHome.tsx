@@ -114,7 +114,6 @@ export default function PersonResearcher() {
     setPraiseResult(null);
     setSimilarPeopleResult(null);
     setIsGenerating(false);
-    setIsResearching(false);
   };
 
   // Clear search results
