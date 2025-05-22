@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
       text: true,
       type: "keyword",
       numResults: 10,
-      summary: true
     });
 
     return NextResponse.json({ results });

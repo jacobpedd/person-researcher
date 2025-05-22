@@ -4,6 +4,7 @@ import Link from "next/link";
 import ProfileResults from "./profileResults/ProfileResults";
 import SummaryDisplay from "./summary/SummaryDisplay";
 import FunFactsDisplay, { FunFact } from "./funfacts/FunFactsDisplay";
+import CareerDisplay, { CareerData } from "./career/CareerDisplay";
 import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
@@ -33,6 +34,7 @@ export default function PersonResearcher() {
   }> | null>(null);
   const [summaryResult, setSummaryResult] = useState<string | null>(null);
   const [funFactsResult, setFunFactsResult] = useState<FunFact[] | null>(null);
+  const [careerResult, setCareerResult] = useState<CareerData | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -111,6 +113,7 @@ export default function PersonResearcher() {
     setSummaryResult(null);
     setExaSearchResults(null);
     setFunFactsResult(null);
+    setCareerResult(null);
     setIsGenerating(false);
     setIsResearching(false);
   };
@@ -121,6 +124,7 @@ export default function PersonResearcher() {
     if (selectedProfile?.id !== profile.id) {
       setSummaryResult(null);
       setFunFactsResult(null);
+      setCareerResult(null);
       setExaSearchResults(null);
       setIsGenerating(false);
       setIsResearching(false);
@@ -219,6 +223,43 @@ export default function PersonResearcher() {
     }
   };
 
+  // Function to fetch career information
+  const fetchCareer = async (
+    query: string, 
+    profile: ProfileResult,
+    exaResults: SearchResponse<{
+      text: true;
+      type: string;
+      numResults: number;
+      summary: true;
+    }>
+  ) => {
+    try {
+      const response = await fetch('/api/career', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: query,
+          profileResult: profile,
+          exaResults: exaResults
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch career information');
+      
+      const data = await response.json();
+      setCareerResult({
+        skills: data.skills,
+        timeline: data.timeline
+      });
+      console.log('Career information loaded:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching career information:', error);
+      throw error;
+    }
+  };
+
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -252,7 +293,8 @@ export default function PersonResearcher() {
       // Populate report sections in parallel - this is the "generating" phase
       const promises = [
         fetchSummary(searchQuery, selectedProfile, exaResults),
-        fetchFunFacts(searchQuery, selectedProfile, exaResults)
+        fetchFunFacts(searchQuery, selectedProfile, exaResults),
+        fetchCareer(searchQuery, selectedProfile, exaResults)
       ];
       
       // Wait for any parallel promises to complete
@@ -387,6 +429,13 @@ export default function PersonResearcher() {
             {!isResearching && (isGenerating || funFactsResult) && (
               <FunFactsDisplay 
                 funFacts={funFactsResult} 
+                isLoading={isGenerating} 
+              />
+            )}
+
+            {!isResearching && (isGenerating || careerResult) && (
+              <CareerDisplay 
+                careerData={careerResult} 
                 isLoading={isGenerating} 
               />
             )}
