@@ -9,8 +9,8 @@ export const maxDuration = 60;
 // Define Zod schema for a fun fact
 const FunFactSchema = z.object({
   fact: z.string().describe('The interesting fun fact about the person'),
-  source: z.string().optional().describe('The source of this fun fact (use just the title of the website, e.g. "LinkedIn", "Forbes", "TechCrunch")'),
-  sourceUrl: z.string().optional().describe('The URL link to the source, if available')
+  source: z.string().nullable().describe('The source of this fun fact (use just the title of the website, e.g. "LinkedIn", "Forbes", "TechCrunch")'),
+  sourceUrl: z.string().nullable().describe('The URL link to the source, if available')
 });
 
 // Define Zod schema for the collection of fun facts wrapped in an object
