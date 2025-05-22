@@ -136,12 +136,12 @@ export default function PersonResearcher() {
   };
 
   // Function to fetch Exa search results
-  const fetchExaSearchResults = async (query: string) => {
+  const fetchExaSearchResults = async (query: string, profile: ProfileResult) => {
     try {
       const response = await fetch('/api/exaSearch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchQuery: query }),
+        body: JSON.stringify({ searchQuery: query, selectedProfile: profile }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch Exa search results');
@@ -374,7 +374,7 @@ export default function PersonResearcher() {
 
     try {
       // Fetch Exa search results - this is the "researching" phase
-      const exaResults = await fetchExaSearchResults(selectedProfile.name);
+      const exaResults = await fetchExaSearchResults(selectedProfile.name, selectedProfile);
       
       // Throw error if exaResults is null
       if (!exaResults) {

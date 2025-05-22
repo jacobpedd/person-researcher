@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Exa from "exa-js";
+import outdent from "outdent";
 
 export const maxDuration = 60;
 
@@ -7,7 +8,7 @@ const exa = new Exa(process.env.EXA_API_KEY as string);
 
 export async function POST(req: NextRequest) {
   try {
-    const { searchQuery } = await req.json();
+    const { searchQuery, selectedProfile } = await req.json();
 
     if (!searchQuery) {
       return NextResponse.json(
@@ -16,13 +17,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: Try to use name/headline to get more relevant results
-    // Maybe use neural search instead of keyword search
+    if (!selectedProfile) {
+      return NextResponse.json(
+        { error: "selectedProfile is required" },
+        { status: 400 }
+      );
+    }
 
-    const results = await exa.searchAndContents(searchQuery, {
+    // Build search prompt based on profile source
+    const searchPrompt = outdent`
+      ${selectedProfile.name}
+      ${selectedProfile.headline || ""}
+      Here are some websites that contain information about the person in the above ${selectedProfile.source} profile: 
+    `;
+
+    const results = await exa.searchAndContents(searchPrompt, {
       text: true,
-      type: "keyword",
-      numResults: 10,
+      type: "neural",
+      numResults: 25,
     });
 
     return NextResponse.json({ results });
