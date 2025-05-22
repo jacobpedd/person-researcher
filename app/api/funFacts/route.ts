@@ -9,7 +9,8 @@ export const maxDuration = 60;
 // Define Zod schema for a fun fact
 const FunFactSchema = z.object({
   fact: z.string().describe('The interesting fun fact about the person'),
-  source: z.string().optional().describe('The source of this fun fact, if available')
+  source: z.string().optional().describe('The source of this fun fact, if available'),
+  sourceUrl: z.string().optional().describe('The URL link to the source, if available')
 });
 
 // Define Zod schema for the collection of fun facts wrapped in an object
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Extract content from profile if available
     const name = profileResult?.name || searchQuery;
     const headline = profileResult?.headline || '';
-    const source = profileResult?.source || '';
+    const url = profileResult?.url || '';
     const text = profileResult?.text || '';
 
     // Extract relevant information from exaResults
@@ -63,8 +64,14 @@ export async function POST(request: NextRequest) {
 
     // Create prompt with all instructions in user message
     const prompt = outdent`
-      ## Task
-      Generate 5-7 engaging, interesting fun facts about ${name} based on the provided information. Focus on unique accomplishments, surprising background details, hobbies, quirky preferences, or lesser-known achievements. Include sources when available.
+      ## Instructions
+      - Generate 3-5 fun facts about ${name}
+      - Look for maximally surprising or unexpected details that most people wouldn't know
+      - Focus on quirky hobbies, weird coincidences, unexpected career pivots, or unusual talents
+      - Each fact should be ONE short sentence (try to keep it to one line)
+      - Use a casual, fun tone - like you're sharing gossip with a friend
+      - Prioritize facts from search results over profile information
+      - Include sources and source URLs when possible
 
       ## Search Query
       ${searchQuery}
@@ -72,7 +79,7 @@ export async function POST(request: NextRequest) {
       ## Profile Information
       Name: ${name}
       Headline: ${headline}
-      Source: ${source}
+      Url: ${url}
       Text: 
       ${text}
 
@@ -80,13 +87,14 @@ export async function POST(request: NextRequest) {
       ${JSON.stringify(exaContent, null, 2)}
 
       ## Guidelines
-      - Make each fun fact short, specific, and engaging
-      - Focus on what makes them unique or noteworthy
-      - Include sources when possible (using format "Source: [source]")
-      - Cover a variety of aspects about the person (work, personal life, achievements, etc.)
+      - Keep each fun fact super short and punchy
+      - Focus on what makes them genuinely surprising or memorable
+      - Try to use search result sources for most facts, avoiding profile info when possible
+      - Include sources when possible, along with the source URL when available
+      - Cover different aspects of the person's life (not just work achievements)
       - Avoid generic information that could apply to many people
       - Stick to information that's actually in the provided data
-      - Generate exactly 5-7 fun facts, no more and no less
+      - Generate 3-5 fun facts
       
       ## Output Format
       Provide your response as a structured object with a 'funFacts' array containing fun facts. Each fun fact should have a 'fact' field and an optional 'source' field.
