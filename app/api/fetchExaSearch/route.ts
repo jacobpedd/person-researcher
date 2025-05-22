@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const results = await exa.searchAndContents(searchQuery, {
       text: true,
       type: "keyword",
-      numResults: 50,
+      numResults: 10,
       summary: true
     });
 

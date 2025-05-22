@@ -2,6 +2,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import ProfileResults from "./profileResults/ProfileResults";
+import SummaryDisplay from "./summary/SummaryDisplay";
 import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
@@ -104,6 +105,8 @@ export default function PersonResearcher() {
     setLinkedInResults(null);
     setWikipediaResults(null);
     setSelectedProfile(null);
+    setSummaryResult(null);
+    setExaSearchResults(null);
   };
 
   // Function to fetch Exa search results
@@ -179,20 +182,23 @@ export default function PersonResearcher() {
     setErrors({});
 
     try {
-      // First fetch Exa search results, then fetch summary
-      const exaResultsPromise = fetchExaSearchResults(selectedProfile.name)
-        .then(exaResults => {
-          if (exaResults) {
-            return fetchSummary(searchQuery, selectedProfile, exaResults);
-          }
-        });
-
-      // Run all API calls in parallel with the selected profile
+      // Fetch Exa search results
+      const exaResults = await fetchExaSearchResults(selectedProfile.name);
+      
+      // Throw error if exaResults is null
+      if (!exaResults) {
+        throw new Error("Failed to fetch search results");
+      }
+      
+      // Populate report sections in parallel
       const promises = [
-        exaResultsPromise
+        await fetchSummary(searchQuery, selectedProfile, exaResults)
       ];
-
-      await Promise.allSettled(promises);
+      
+      // Wait for any parallel promises to complete
+      if (promises.length > 0) {
+        await Promise.allSettled(promises);
+      }
       console.log("Research completed successfully");
     } catch (error) {
       console.error("Error during research:", error);
@@ -285,34 +291,12 @@ export default function PersonResearcher() {
         </div>
       ))}
 
-      {(isGenerating || exaSearchResults) && (
-        <div className="mt-6 p-4 bg-gray-100 rounded overflow-auto max-h-[500px]">
-          <h2 className="text-xl font-semibold mb-2">Exa Search Results</h2>
-          {isGenerating ? (
-            <div className="flex justify-center items-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-              <span className="ml-2">Loading results...</span>
-            </div>
-          ) : (
-            <pre className="text-xs">{JSON.stringify(exaSearchResults, null, 2)}</pre>
-          )}
-        </div>
-      )}
       
       {(isGenerating || summaryResult) && (
-        <div className="mt-6 p-4 bg-gray-100 rounded overflow-auto max-h-[500px]">
-          <h2 className="text-xl font-semibold mb-2">Summary</h2>
-          {isGenerating ? (
-            <div className="flex justify-center items-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-              <span className="ml-2">Generating summary...</span>
-            </div>
-          ) : (
-            <div className="prose">
-              {summaryResult}
-            </div>
-          )}
-        </div>
+        <SummaryDisplay 
+          summary={summaryResult} 
+          isLoading={isGenerating} 
+        />
       )}
 
       <div className="flex-grow"></div>

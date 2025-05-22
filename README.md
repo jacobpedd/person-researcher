@@ -57,7 +57,7 @@ Person Researcher is a free and open-source tool that helps you instantly unders
 ### Prerequisites
 - Node.js
 - Exa.ai API key
-- Anthropic API key
+- OpenAI API key
 - (Optional) YouTube API key
 - (Optional) GitHub token
 
@@ -93,7 +93,7 @@ yarn dev
 
 ### Required API Keys
 * **Exa API Key**: Get from [Exa Dashboard](https://dashboard.exa.ai/api-keys)
-* **Anthropic API Key**: Get from [Anthropic Console](https://console.anthropic.com/)
+* **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
 
 ### Optional API Keys (for additional features)
 * **YouTube API Key**: Get from [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (for YouTube video fetching)
@@ -108,7 +108,7 @@ Create a `.env.local` file in the root directory with the following structure:
 ```env
 # Required
 EXA_API_KEY=your_exa_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
 
 # Optional - for additional features
 YOUTUBE_API_KEY=your_youtube_api_key
