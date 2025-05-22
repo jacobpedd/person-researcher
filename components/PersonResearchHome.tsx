@@ -5,6 +5,7 @@ import ProfileResults from "./profileResults/ProfileResults";
 import SummaryDisplay from "./summary/SummaryDisplay";
 import FunFactsDisplay, { FunFact } from "./funfacts/FunFactsDisplay";
 import CareerDisplay, { CareerData } from "./career/CareerDisplay";
+import RoastPraiseDisplay from "./roastpraise/RoastPraiseDisplay";
 import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
@@ -35,6 +36,8 @@ export default function PersonResearcher() {
   const [summaryResult, setSummaryResult] = useState<string | null>(null);
   const [funFactsResult, setFunFactsResult] = useState<FunFact[] | null>(null);
   const [careerResult, setCareerResult] = useState<CareerData | null>(null);
+  const [roastResult, setRoastResult] = useState<string | null>(null);
+  const [praiseResult, setPraiseResult] = useState<string | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -114,6 +117,8 @@ export default function PersonResearcher() {
     setExaSearchResults(null);
     setFunFactsResult(null);
     setCareerResult(null);
+    setRoastResult(null);
+    setPraiseResult(null);
     setIsGenerating(false);
     setIsResearching(false);
   };
@@ -125,6 +130,8 @@ export default function PersonResearcher() {
       setSummaryResult(null);
       setFunFactsResult(null);
       setCareerResult(null);
+      setRoastResult(null);
+      setPraiseResult(null);
       setExaSearchResults(null);
       setIsGenerating(false);
       setIsResearching(false);
@@ -260,6 +267,74 @@ export default function PersonResearcher() {
     }
   };
 
+  // Function to fetch roast
+  const fetchRoast = async (
+    query: string, 
+    profile: ProfileResult,
+    exaResults: SearchResponse<{
+      text: true;
+      type: string;
+      numResults: number;
+      summary: true;
+    }>
+  ) => {
+    try {
+      const response = await fetch('/api/roast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: query,
+          profileResult: profile,
+          exaResults: exaResults
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch roast');
+      
+      const data = await response.json();
+      setRoastResult(data.roast);
+      console.log('Roast loaded:', data.roast);
+      return data;
+    } catch (error) {
+      console.error('Error fetching roast:', error);
+      throw error;
+    }
+  };
+
+  // Function to fetch praise
+  const fetchPraise = async (
+    query: string, 
+    profile: ProfileResult,
+    exaResults: SearchResponse<{
+      text: true;
+      type: string;
+      numResults: number;
+      summary: true;
+    }>
+  ) => {
+    try {
+      const response = await fetch('/api/praise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: query,
+          profileResult: profile,
+          exaResults: exaResults
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch praise');
+      
+      const data = await response.json();
+      setPraiseResult(data.praise);
+      console.log('Praise loaded:', data.praise);
+      return data;
+    } catch (error) {
+      console.error('Error fetching praise:', error);
+      throw error;
+    }
+  };
+
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -294,7 +369,9 @@ export default function PersonResearcher() {
       const promises = [
         fetchSummary(searchQuery, selectedProfile, exaResults),
         fetchFunFacts(searchQuery, selectedProfile, exaResults),
-        fetchCareer(searchQuery, selectedProfile, exaResults)
+        fetchCareer(searchQuery, selectedProfile, exaResults),
+        fetchRoast(searchQuery, selectedProfile, exaResults),
+        fetchPraise(searchQuery, selectedProfile, exaResults)
       ];
       
       // Wait for any parallel promises to complete
@@ -436,6 +513,14 @@ export default function PersonResearcher() {
             {!isResearching && (isGenerating || careerResult) && (
               <CareerDisplay 
                 careerData={careerResult} 
+                isLoading={isGenerating} 
+              />
+            )}
+
+            {!isResearching && (isGenerating || roastResult || praiseResult) && (
+              <RoastPraiseDisplay 
+                roastContent={roastResult} 
+                praiseContent={praiseResult} 
                 isLoading={isGenerating} 
               />
             )}
