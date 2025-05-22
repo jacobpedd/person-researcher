@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
       ## Guidelines
       - Make this fun and engaging, like a Wikipedia intro but with personality
-      - Keep it short and sweet - maximum two paragraphs
+      - Keep it short and sweet - maximum ONE paragraph
       - Include the most interesting facts about this person
       - Focus on what makes them unique or noteworthy
       - Use a friendly, conversational tone
@@ -113,15 +113,14 @@ export async function POST(req: NextRequest) {
 
       ## Formatting Instructions
       - Format your response as plain text only
-      - Use only simple new line characters (\n) to separate paragraphs
+      - Write as a single paragraph with no line breaks
       - Do not use HTML, Markdown, or any other formatting syntax
-      - Each paragraph should be separated by exactly one blank line
       - No section headers or titles within the text
     `;
 
     // Generate the summary using OpenAI
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4.1",
       input: prompt
     });
     

@@ -12,19 +12,12 @@ const SummarySkeleton = () => (
     <div className="mb-6 pb-2 border-b">
       <Skeleton className="h-8 w-48" />
     </div>
-    <div className="space-y-6">
-      {/* First paragraph */}
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-[80%]" />
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-[90%]" />
-      </div>
-      {/* Second paragraph */}
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-[95%]" />
-        <Skeleton className="h-6 w-[85%]" />
-        <Skeleton className="h-6 w-[75%]" />
-      </div>
+    <div className="space-y-2">
+      {/* Single paragraph */}
+      <Skeleton className="h-6 w-[80%]" />
+      <Skeleton className="h-6 w-full" />
+      <Skeleton className="h-6 w-[90%]" />
+      <Skeleton className="h-6 w-[85%]" />
     </div>
   </div>
 );
@@ -37,7 +30,7 @@ export default function SummaryDisplay({ summary, isLoading }: SummaryDisplayPro
           <SummarySkeleton />
         </div>
       ) : (
-        <div className="p-4 bg-white rounded shadow-md overflow-auto max-h-[600px]">
+        <div className="p-4 bg-white rounded shadow-md">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">📝 Summary</h2>
           <div className="prose max-w-none text-gray-700 leading-relaxed">
             {summary && summary.split('\n').map((paragraph, index) => (
