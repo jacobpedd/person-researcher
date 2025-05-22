@@ -415,7 +415,7 @@ export default function PersonResearcher() {
       </h1>
 
       <p className="text-black mb-12 opacity-0 animate-fade-up [animation-delay:400ms]">
-        Search for any person and see what the internet knows about them. 
+        Search any person to see what the internet knows about them. 
       </p>
 
       <div className="space-y-6 mb-20">

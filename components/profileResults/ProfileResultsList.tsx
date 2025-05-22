@@ -44,7 +44,7 @@ const ProfileResultsList: React.FC<ProfileResultsListProps> = ({
   
   const displayResults = showAll ? results : results.slice(0, 3);
   const hasMoreResults = results.length > 3;
-  const sourceLabel = source === "linkedin" ? "LinkedIn Profile" : "Wikipedia Article";
+  const sourceLabel = source === "linkedin" ? "LinkedIn Profile" : "Wikipedia";
   const headerText = source === "linkedin" ? "Select a LinkedIn Profile:" : "Select a Wikipedia Article:";
 
   return (
