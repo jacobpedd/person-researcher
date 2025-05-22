@@ -351,6 +351,14 @@ export default function PersonResearcher() {
 
     setIsResearching(true);
     setErrors({});
+    
+    // Clear all previous research data
+    setSummaryResult(null);
+    setFunFactsResult(null);
+    setCareerResult(null);
+    setRoastResult(null);
+    setPraiseResult(null);
+    setExaSearchResults(null);
 
     try {
       // Fetch Exa search results - this is the "researching" phase
@@ -375,9 +383,7 @@ export default function PersonResearcher() {
       ];
       
       // Wait for any parallel promises to complete
-      if (promises.length > 0) {
-        await Promise.allSettled(promises);
-      }
+      await Promise.allSettled(promises);
       console.log("Research completed successfully");
     } catch (error) {
       console.error("Error during research:", error);
@@ -483,13 +489,13 @@ export default function PersonResearcher() {
           
           {isResearching && (
             <div className="mt-4 p-4 bg-white rounded shadow-md">
-              <div className="flex items-center">
-                <div className="mr-4">
-                  <div className="inline-block animate-spin rounded-full border-4 border-gray-300 border-t-brand-default h-10 w-10"></div>
-                </div>
-                <div>
-                  <h3 className="font-medium text-lg">Researching...</h3>
-                  <p className="text-gray-600">Gathering information about {selectedProfile.name}</p>
+                <div className="flex items-center">
+                  <div className="mr-4">
+                    <div className="inline-block animate-spin rounded-full border-4 border-gray-300 border-t-brand-default h-10 w-10"></div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">Researching...</h3>
+                    <p className="text-gray-600">Gathering information about {selectedProfile.name}</p>
                 </div>
               </div>
             </div>
@@ -499,21 +505,21 @@ export default function PersonResearcher() {
             {!isResearching && (isGenerating || summaryResult) && (
               <SummaryDisplay 
                 summary={summaryResult} 
-                isLoading={isGenerating} 
+                isLoading={isGenerating && summaryResult === null} 
               />
             )}
             
             {!isResearching && (isGenerating || funFactsResult) && (
               <FunFactsDisplay 
                 funFacts={funFactsResult} 
-                isLoading={isGenerating} 
+                isLoading={isGenerating && funFactsResult === null} 
               />
             )}
 
             {!isResearching && (isGenerating || careerResult) && (
               <CareerDisplay 
                 careerData={careerResult} 
-                isLoading={isGenerating} 
+                isLoading={isGenerating && careerResult === null} 
               />
             )}
 
@@ -521,7 +527,7 @@ export default function PersonResearcher() {
               <RoastPraiseDisplay 
                 roastContent={roastResult} 
                 praiseContent={praiseResult} 
-                isLoading={isGenerating} 
+                isLoading={isGenerating && roastResult === null && praiseResult === null} 
               />
             )}
           </div>
