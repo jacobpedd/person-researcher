@@ -105,6 +105,9 @@ export async function POST(req: NextRequest) {
       ## Guidelines
       - Make this fun and engaging, like a Wikipedia intro but with personality
       - Keep it short and sweet - maximum ONE paragraph
+      - Focus on keeping the writing readable and engaging, not overloading on formality
+      - Don't just walk through career history - that will be it's own section
+      - Talk about non-work aspects of their background when possible
       - Include the most interesting facts about this person
       - Focus on what makes them unique or noteworthy
       - Use a friendly, conversational tone

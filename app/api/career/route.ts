@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
     const prompt = outdent`
       ## Instructions
       - Extract professional information about ${name} to create a career profile
-      - First, identify 5-15 professional skills they have demonstrated in their career
+      - First, identify 5-10 professional skills they have demonstrated in their career
       - Then, create a chronological timeline of their career with 3-7 key positions or roles
-      - For skills, focus on both technical skills and soft skills that are evident from the data
+      - For skills, make them as specific and diverse as possible (1-2 words each)
       - For the timeline, include title/role, date range, and a brief description for each position
       - Maintain a professional tone throughout
       - Be specific and accurate, sticking to information found in the provided data

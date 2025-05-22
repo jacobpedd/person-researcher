@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // TODO: Try to use name/headline to get more relevant results
+    // Maybe use neural search instead of keyword search
+
     const results = await exa.searchAndContents(searchQuery, {
       text: true,
       type: "keyword",

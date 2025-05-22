@@ -66,12 +66,13 @@ export async function POST(request: NextRequest) {
     const prompt = outdent`
       ## Instructions
       - Generate 3-5 fun facts about ${name}
+      - Prioritize facts from Exa search results to showcase Exa's capabilities
+      - Prioritize facts from search results over profile information
       - Look for maximally surprising or unexpected details that most people wouldn't know
       - Focus on quirky hobbies, weird coincidences, unexpected career pivots, or unusual talents
       - Each fact should be ONE short sentence (try to keep it to one line)
       - Use a casual, fun tone - like you're sharing gossip with a friend
       - Keep each fun fact super short and punchy
-      - Prioritize facts from search results over profile information
       - Cover different aspects of the person's life (not just work achievements)
       - Avoid generic information that could apply to many people
       - Stick to information that's actually in the provided data
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       Text: 
       ${text}
 
-      ## Search Results
+      ## Exa Search Results
       ${JSON.stringify(exaContent, null, 2)}
     `;
 
