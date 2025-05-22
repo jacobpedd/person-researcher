@@ -44,18 +44,14 @@ export async function POST(request: NextRequest) {
       ## Instructions
       - Generate 3-5 fun facts based on the provided information
       - Prioritize facts from Exa search results to showcase Exa's capabilities
-      - Prioritize facts from search results over profile information
-      - Look for maximally surprising or unexpected details that most people wouldn't know
-      - Focus on quirky hobbies, weird coincidences, unexpected career pivots, or unusual talents
-      - Each fact should be ONE short sentence (try to keep it to one line)
-      - Use a casual, fun tone - like you're sharing gossip with a friend
-      - Keep each fun fact super short and punchy
-      - Cover different aspects of the person's life (not just work achievements)
-      - Avoid generic information that could apply to many people
+      - Avoid only listing career related facts
+      - Look for unique or suprising facts that most people wouldn't know
+      - Try to use different sources for each fact when possible
+      - Avoid overly cringe or cheesy language, minimize exclamation points and cliché phrases
+      - Use a casual and engaging tone like you're writing to go viral on twitter
+      - Each fact should be one short sentence so that it can be read on one line
       - Stick to information that's actually in the provided data
       - For each fact, include a source (just use the website name like "LinkedIn" or "TechCrunch") and source URL when available
-      - Provide your response as a structured object with a 'funFacts' array containing fun facts
-      - Each fun fact should have a 'fact' field and optional 'source' (website name only) and 'sourceUrl' fields
 
       ${contextPrompt}
     `;

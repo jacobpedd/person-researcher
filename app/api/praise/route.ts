@@ -23,27 +23,15 @@ export async function POST(req: NextRequest) {
     }
     
     const prompt = outdent`
-      Create an uplifting, positive affirmation-style praise based on the following information. Focus on their strengths, achievements, and positive qualities.
+      ## Instructions
+      - Write a short positive affirmation-style praise paragraph based on the following context
+      - Focus on calling out specific details referenced in the context
+      - The tone should be warm and supportive without being overly cringy or cheesy
+      - Write in the third person (talking ABOUT them, not TO them)
+      - Keep it to one short paragraph
+      - Do not use HTML, Markdown, or any other formatting syntax
 
       ${contextPrompt}
-
-      ## Guidelines
-      - Focus on genuine accomplishments and positive qualities
-      - Highlight their professional achievements, skills, and contributions
-      - Use an encouraging, warm, and supportive tone
-      - Keep it authentic - base praise on actual information provided
-      - Keep it short and impactful - maximum ONE paragraph
-      - Think "motivational speaker" or "positive affirmation" style
-      - Celebrate their unique strengths and what makes them special
-      - Use inspiring and uplifting language
-      - Write in second-person (talking TO them, not ABOUT them)
-      - Make them feel genuinely appreciated and valued
-
-      ## Formatting Instructions
-      - Format your response as plain text only
-      - Write as a single paragraph with no line breaks
-      - Do not use HTML, Markdown, or any other formatting syntax
-      - No section headers or titles within the text
     `;
 
     const response = await openai.responses.create({

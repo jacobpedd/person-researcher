@@ -23,26 +23,20 @@ export async function POST(req: NextRequest) {
     }
     
     const prompt = outdent`
-      Create a comedic, playful roast based on the following information. Keep it lighthearted and fun - think comedy roast style, not mean-spirited.
+      ## Instructions
+      - Create a comedic, playful roast based on the provided information
+      - Open with a banger that sets the tone
+      - Use the right blend of comedic insights and biting humor used on a roast 
+      - Focus on details from the context that stand out as odd 
+      - Avoid repeating the same joke or punchline
+      - Write in the third person (talking ABOUT them, not TO them)
+      - Proiritize humor that would go viral on Twitter
+      - Don't be repetitive or just list career history
+      - Don't be overly cringy or cheesy
+      - Keep it to one short paragraph
+      - Do not use HTML, Markdown, or any other formatting syntax
 
       ${contextPrompt}
-
-      ## Guidelines
-      - Keep it playful and comedic, not cruel or personal
-      - Focus on professional quirks, industry stereotypes, or funny observations
-      - Use witty observations about their career, achievements, or public persona
-      - Keep it short and punchy - maximum ONE paragraph
-      - Think "Comedy Central Roast" style - funny but not offensive
-      - Avoid anything that could be genuinely hurtful or inappropriate
-      - Base jokes on the actual information provided, not made-up details
-      - Use a confident, comedic tone
-      - Write in second-person (talking TO them, not ABOUT them)
-
-      ## Formatting Instructions
-      - Format your response as plain text only
-      - Write as a single paragraph with no line breaks
-      - Do not use HTML, Markdown, or any other formatting syntax
-      - No section headers or titles within the text
     `;
 
     const response = await openai.responses.create({

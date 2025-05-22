@@ -9,7 +9,6 @@ interface ContextPromptParams {
     text: true;
     type: string;
     numResults: number;
-    summary: true;
   }>;
 }
 
@@ -22,7 +21,6 @@ export function generateContextPrompt({ searchQuery, profileResult, exaResults }
     title: result.title || "",
     url: result.url,
     text: result.text || "",
-    summary: result.summary || ""
   }));
 
   return outdent`
@@ -36,7 +34,13 @@ export function generateContextPrompt({ searchQuery, profileResult, exaResults }
     Text: 
     ${text}
 
-    ## Search Results
-    ${JSON.stringify(exaContent, null, 2)}
+    ## Exa Search Results
+    **Note:** Only use result content that relates to the person in the above profile.
+    ${exaContent.map(result => outdent`
+      ### ${result.title}
+      - Title: ${result.title}
+      - URL: ${result.url}
+      - Text Content: ${result.text}
+    `).join('\n\n')}
   `;
 }

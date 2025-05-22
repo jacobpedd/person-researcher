@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const prompt = outdent`
       ## Instructions
       - Extract professional information to create a career profile
-      - First, identify 5-10 professional skills they have demonstrated in their career
+      - First, identify 3-10 professional skills they have demonstrated in their career
       - Then, create a chronological timeline of their career with 3-7 key positions or roles
       - For skills, make them as specific and diverse as possible (1-2 words each)
       - For the timeline, include title/role, date range, and a brief description for each position
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     // Generate career information using OpenAI with structured output
     const response = await openai.responses.parse({
-      model: "gpt-4.1",
+      model: "gpt-4.1-mini",
       input: prompt,
       text: {
         format: zodTextFormat(CareerResponseSchema, 'career')
