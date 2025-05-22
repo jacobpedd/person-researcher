@@ -78,9 +78,9 @@ const ProfileResultsList: React.FC<ProfileResultsListProps> = ({
         {hasMoreResults && (
           <button
             onClick={() => setShowAll(!showAll)}
-            className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 text-center border border-gray-200 rounded-sm bg-gray-50 hover:bg-gray-100 transition-colors"
+            className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 text-center transition-colors"
           >
-            {showAll ? "Show Less" : "Show More Results"}
+            {showAll ? "Show Less" : "Show More"}
           </button>
         )}
       </div>
