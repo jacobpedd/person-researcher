@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { SearchResponse } from "exa-js";
 import OpenAI from "openai";
 import outdent from "outdent";
 
@@ -9,91 +8,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-interface RoastRequestBody {
-  searchQuery: string;
-  profileResult: {
-    id: string;
-    name: string;
-    headline: string;
-    url: string;
-    text: string;
-    source: "linkedin" | "wikipedia";
-  };
-  exaResults: SearchResponse<{
-    text: true;
-    type: string;
-    numResults: number;
-    summary: true;
-  }>;
-}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    const { searchQuery, profileResult, exaResults } = body as RoastRequestBody;
+    const { contextPrompt } = body;
     
-    if (!searchQuery) {
+    if (!contextPrompt) {
       return NextResponse.json(
-        { error: "searchQuery is required" },
+        { error: "contextPrompt is required" },
         { status: 400 }
       );
     }
-    
-    if (!profileResult) {
-      return NextResponse.json(
-        { error: "profileResult is required" },
-        { status: 400 }
-      );
-    }
-    
-    if (!exaResults) {
-      return NextResponse.json(
-        { error: "exaResults is required" },
-        { status: 400 }
-      );
-    }
-    
-    const { id, name, headline, url, text, source } = profileResult;
-    
-    if (!id || !name || !headline || !url || !text || !source) {
-      return NextResponse.json(
-        { error: "profileResult is missing required fields" },
-        { status: 400 }
-      );
-    }
-    
-    if (source !== "linkedin" && source !== "wikipedia") {
-      return NextResponse.json(
-        { error: "profileResult.source must be 'linkedin' or 'wikipedia'" },
-        { status: 400 }
-      );
-    }
-    
-    const exaContent = exaResults.results.map(result => {
-      return {
-        title: result.title || "",
-        url: result.url,
-        text: result.text || "",
-        summary: result.summary || ""
-      };
-    });
     
     const prompt = outdent`
-      Create a comedic, playful roast of ${name} based on the following information. Keep it lighthearted and fun - think comedy roast style, not mean-spirited.
+      Create a comedic, playful roast based on the following information. Keep it lighthearted and fun - think comedy roast style, not mean-spirited.
 
-      ## Search Query
-      ${searchQuery}
-
-      ## Profile Information
-      Name: ${name}
-      Headline: ${headline}
-      Source: ${source}
-      Text: 
-      ${text}
-
-      ## Search Results
-      ${JSON.stringify(exaContent, null, 2)}
+      ${contextPrompt}
 
       ## Guidelines
       - Keep it playful and comedic, not cruel or personal

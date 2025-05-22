@@ -8,6 +8,7 @@ import CareerDisplay, { CareerData } from "./career/CareerDisplay";
 import RoastPraiseDisplay from "./roastpraise/RoastPraiseDisplay";
 import SimilarPeopleDisplay from "./similar/SimilarPeopleDisplay";
 import type { SearchResponse } from "exa-js";
+import { generateContextPrompt } from "../lib/promptUtils";
 
 export interface ProfileResult {
   id: string;
@@ -156,25 +157,12 @@ export default function PersonResearcher() {
   };
 
   // Function to fetch summary
-  const fetchSummary = async (
-    query: string, 
-    profile: ProfileResult, 
-    exaResults: SearchResponse<{
-      text: true;
-      type: string;
-      numResults: number;
-      summary: true;
-    }>
-  ) => {
+  const fetchSummary = async (contextPrompt: string) => {
     try {
       const response = await fetch('/api/summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: query,
-          profileResult: profile,
-          exaResults: exaResults
-        }),
+        body: JSON.stringify({ contextPrompt }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch summary');
@@ -190,25 +178,12 @@ export default function PersonResearcher() {
   };
   
   // Function to fetch fun facts
-  const fetchFunFacts = async (
-    query: string, 
-    profile: ProfileResult,
-    exaResults: SearchResponse<{
-      text: true;
-      type: string;
-      numResults: number;
-      summary: true;
-    }>
-  ) => {
+  const fetchFunFacts = async (contextPrompt: string) => {
     try {
       const response = await fetch('/api/funFacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: query,
-          profileResult: profile,
-          exaResults: exaResults
-        }),
+        body: JSON.stringify({ contextPrompt }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch fun facts');
@@ -224,25 +199,12 @@ export default function PersonResearcher() {
   };
 
   // Function to fetch career information
-  const fetchCareer = async (
-    query: string, 
-    profile: ProfileResult,
-    exaResults: SearchResponse<{
-      text: true;
-      type: string;
-      numResults: number;
-      summary: true;
-    }>
-  ) => {
+  const fetchCareer = async (contextPrompt: string) => {
     try {
       const response = await fetch('/api/career', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: query,
-          profileResult: profile,
-          exaResults: exaResults
-        }),
+        body: JSON.stringify({ contextPrompt }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch career information');
@@ -261,25 +223,12 @@ export default function PersonResearcher() {
   };
 
   // Function to fetch roast
-  const fetchRoast = async (
-    query: string, 
-    profile: ProfileResult,
-    exaResults: SearchResponse<{
-      text: true;
-      type: string;
-      numResults: number;
-      summary: true;
-    }>
-  ) => {
+  const fetchRoast = async (contextPrompt: string) => {
     try {
       const response = await fetch('/api/roast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: query,
-          profileResult: profile,
-          exaResults: exaResults
-        }),
+        body: JSON.stringify({ contextPrompt }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch roast');
@@ -295,25 +244,12 @@ export default function PersonResearcher() {
   };
 
   // Function to fetch praise
-  const fetchPraise = async (
-    query: string, 
-    profile: ProfileResult,
-    exaResults: SearchResponse<{
-      text: true;
-      type: string;
-      numResults: number;
-      summary: true;
-    }>
-  ) => {
+  const fetchPraise = async (contextPrompt: string) => {
     try {
       const response = await fetch('/api/praise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: query,
-          profileResult: profile,
-          exaResults: exaResults
-        }),
+        body: JSON.stringify({ contextPrompt }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch praise');
@@ -385,13 +321,20 @@ export default function PersonResearcher() {
       setIsResearching(false);
       setIsGenerating(true);
       
+      // Generate context prompt once for all API calls
+      const contextPrompt = generateContextPrompt({
+        searchQuery,
+        profileResult: selectedProfile,
+        exaResults
+      });
+      
       // Populate report sections in parallel - this is the "generating" phase
       const promises = [
-        fetchSummary(searchQuery, selectedProfile, exaResults),
-        fetchFunFacts(searchQuery, selectedProfile, exaResults),
-        fetchCareer(searchQuery, selectedProfile, exaResults),
-        fetchRoast(searchQuery, selectedProfile, exaResults),
-        fetchPraise(searchQuery, selectedProfile, exaResults),
+        fetchSummary(contextPrompt),
+        fetchFunFacts(contextPrompt),
+        fetchCareer(contextPrompt),
+        fetchRoast(contextPrompt),
+        fetchPraise(contextPrompt),
         fetchSimilarPeople(selectedProfile)
       ];
       

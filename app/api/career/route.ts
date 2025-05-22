@@ -26,18 +26,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate that we have the required data
-    const { searchQuery, profileResult, exaResults } = body;
+    const { contextPrompt } = body;
     
-    if (!searchQuery) {
+    if (!contextPrompt) {
       return NextResponse.json(
-        { error: "searchQuery is required" },
-        { status: 400 }
-      );
-    }
-    
-    if (!exaResults) {
-      return NextResponse.json(
-        { error: "exaResults is required" },
+        { error: "contextPrompt is required" },
         { status: 400 }
       );
     }
@@ -47,26 +40,10 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Extract content from profile if available
-    const name = profileResult?.name || searchQuery;
-    const headline = profileResult?.headline || '';
-    const url = profileResult?.url || '';
-    const text = profileResult?.text || '';
-
-    // Extract relevant information from exaResults
-    const exaContent = exaResults.results.map((result: any) => {
-      return {
-        title: result.title || "",
-        url: result.url,
-        text: result.text || "",
-        summary: result.summary || ""
-      };
-    });
-
     // Create prompt
     const prompt = outdent`
       ## Instructions
-      - Extract professional information about ${name} to create a career profile
+      - Extract professional information to create a career profile
       - First, identify 5-10 professional skills they have demonstrated in their career
       - Then, create a chronological timeline of their career with 3-7 key positions or roles
       - For skills, make them as specific and diverse as possible (1-2 words each)
@@ -77,18 +54,7 @@ export async function POST(request: NextRequest) {
       - Arrange timeline events in reverse chronological order (most recent first)
       - Provide your response as a structured object with 'skills' and 'timeline' arrays
 
-      ## Search Query
-      ${searchQuery}
-
-      ## Profile Information
-      Name: ${name}
-      Headline: ${headline}
-      Url: ${url}
-      Text: 
-      ${text}
-
-      ## Search Results
-      ${JSON.stringify(exaContent, null, 2)}
+      ${contextPrompt}
     `;
 
     // Generate career information using OpenAI with structured output

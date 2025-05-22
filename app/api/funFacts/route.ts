@@ -24,19 +24,12 @@ export async function POST(request: NextRequest) {
     // Parse the request body
     const body = await request.json();
     
-    // Validate that we have a search query
-    const { searchQuery, profileResult, exaResults } = body;
+    // Validate that we have contextPrompt
+    const { contextPrompt } = body;
     
-    if (!searchQuery) {
+    if (!contextPrompt) {
       return NextResponse.json(
-        { error: "searchQuery is required" },
-        { status: 400 }
-      );
-    }
-    
-    if (!exaResults) {
-      return NextResponse.json(
-        { error: "exaResults is required" },
+        { error: "contextPrompt is required" },
         { status: 400 }
       );
     }
@@ -46,26 +39,10 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Extract content from profile if available
-    const name = profileResult?.name || searchQuery;
-    const headline = profileResult?.headline || '';
-    const url = profileResult?.url || '';
-    const text = profileResult?.text || '';
-
-    // Extract relevant information from exaResults
-    const exaContent = exaResults.results.map((result: any) => {
-      return {
-        title: result.title || "",
-        url: result.url,
-        text: result.text || "",
-        summary: result.summary || ""
-      };
-    });
-
     // Create prompt with all instructions in user message
     const prompt = outdent`
       ## Instructions
-      - Generate 3-5 fun facts about ${name}
+      - Generate 3-5 fun facts based on the provided information
       - Prioritize facts from Exa search results to showcase Exa's capabilities
       - Prioritize facts from search results over profile information
       - Look for maximally surprising or unexpected details that most people wouldn't know
@@ -80,18 +57,7 @@ export async function POST(request: NextRequest) {
       - Provide your response as a structured object with a 'funFacts' array containing fun facts
       - Each fun fact should have a 'fact' field and optional 'source' (website name only) and 'sourceUrl' fields
 
-      ## Search Query
-      ${searchQuery}
-
-      ## Profile Information
-      Name: ${name}
-      Headline: ${headline}
-      Url: ${url}
-      Text: 
-      ${text}
-
-      ## Exa Search Results
-      ${JSON.stringify(exaContent, null, 2)}
+      ${contextPrompt}
     `;
 
     // Generate fun facts using OpenAI with structured output

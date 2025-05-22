@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { SearchResponse } from "exa-js";
 import OpenAI from "openai";
 import outdent from "outdent";
 
@@ -10,24 +9,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Define the expected types for the request body
-interface SummaryRequestBody {
-  searchQuery: string;
-  profileResult: {
-    id: string;
-    name: string;
-    headline: string;
-    url: string;
-    text: string;
-    source: "linkedin" | "wikipedia";
-  };
-  exaResults: SearchResponse<{
-    text: true;
-    type: string;
-    numResults: number;
-    summary: true;
-  }>;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,72 +16,20 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     
     // Validate required fields
-    const { searchQuery, profileResult, exaResults } = body as SummaryRequestBody;
+    const { contextPrompt } = body;
     
-    if (!searchQuery) {
+    if (!contextPrompt) {
       return NextResponse.json(
-        { error: "searchQuery is required" },
+        { error: "contextPrompt is required" },
         { status: 400 }
       );
     }
-    
-    if (!profileResult) {
-      return NextResponse.json(
-        { error: "profileResult is required" },
-        { status: 400 }
-      );
-    }
-    
-    if (!exaResults) {
-      return NextResponse.json(
-        { error: "exaResults is required" },
-        { status: 400 }
-      );
-    }
-    
-    // Further validation of profileResult
-    const { id, name, headline, url, text, source } = profileResult;
-    
-    if (!id || !name || !headline || !url || !text || !source) {
-      return NextResponse.json(
-        { error: "profileResult is missing required fields" },
-        { status: 400 }
-      );
-    }
-    
-    if (source !== "linkedin" && source !== "wikipedia") {
-      return NextResponse.json(
-        { error: "profileResult.source must be 'linkedin' or 'wikipedia'" },
-        { status: 400 }
-      );
-    }
-    
-    // Extract relevant information from exaResults
-    const exaContent = exaResults.results.map(result => {
-      return {
-        title: result.title || "",
-        url: result.url,
-        text: result.text || "",
-        summary: result.summary || ""
-      };
-    });
     
     // Create a prompt for the LLM using outdent to maintain proper formatting
     const prompt = outdent`
-      Create a fun, brief Wikipedia-style profile summary for ${name}, based on the following information:
+      Create a fun, brief Wikipedia-style profile summary based on the following information:
 
-      ## Search Query
-      ${searchQuery}
-
-      ## Profile Information
-      Name: ${name}
-      Headline: ${headline}
-      Source: ${source}
-      Text: 
-      ${text}
-
-      ## Search Results
-      ${JSON.stringify(exaContent, null, 2)}
+      ${contextPrompt}
 
       ## Guidelines
       - Make this fun and engaging, like a Wikipedia intro but with personality
