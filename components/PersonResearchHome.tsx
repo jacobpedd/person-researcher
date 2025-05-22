@@ -108,6 +108,22 @@ export default function PersonResearcher() {
     setSelectedProfile(null);
     setSummaryResult(null);
     setExaSearchResults(null);
+    setIsGenerating(false);
+    setIsResearching(false);
+  };
+  
+  // Handle profile selection and clear previous research results
+  const handleProfileSelect = (profile: ProfileResult) => {
+    // If selecting a different profile, clear all research results
+    if (selectedProfile?.id !== profile.id) {
+      setSummaryResult(null);
+      setExaSearchResults(null);
+      setIsGenerating(false);
+      setIsResearching(false);
+      setErrors({});
+    }
+    
+    setSelectedProfile(profile);
   };
 
   // Function to fetch Exa search results
@@ -254,7 +270,7 @@ export default function PersonResearcher() {
             linkedInResults={linkedInResults}
             wikipediaResults={wikipediaResults}
             selectedProfile={selectedProfile}
-            onProfileSelect={setSelectedProfile}
+            onProfileSelect={handleProfileSelect}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             isSearching={isSearching}
