@@ -28,6 +28,7 @@ export default function PersonResearcher() {
     numResults: number;
     summary: true;
   }> | null>(null);
+  const [summaryResult, setSummaryResult] = useState<string | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -105,6 +106,61 @@ export default function PersonResearcher() {
     setSelectedProfile(null);
   };
 
+  // Function to fetch Exa search results
+  const fetchExaSearchResults = async (query: string) => {
+    try {
+      const response = await fetch('/api/fetchExaSearch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchQuery: query }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch Exa search results');
+      
+      const data = await response.json();
+      setExaSearchResults(data.results);
+      console.log('Exa search results loaded:', data.results);
+      return data.results;
+    } catch (error) {
+      console.error('Error fetching Exa search results:', error);
+      throw error;
+    }
+  };
+
+  // Function to fetch summary
+  const fetchSummary = async (
+    query: string, 
+    profile: ProfileResult, 
+    exaResults: SearchResponse<{
+      text: true;
+      type: string;
+      numResults: number;
+      summary: true;
+    }>
+  ) => {
+    try {
+      const response = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: query,
+          profileResult: profile,
+          exaResults: exaResults
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch summary');
+      
+      const data = await response.json();
+      setSummaryResult(data.summary || data.message);
+      console.log('Summary results loaded:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      throw error;
+    }
+  };
+
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -123,19 +179,17 @@ export default function PersonResearcher() {
     setErrors({});
 
     try {
+      // First fetch Exa search results, then fetch summary
+      const exaResultsPromise = fetchExaSearchResults(selectedProfile.name)
+        .then(exaResults => {
+          if (exaResults) {
+            return fetchSummary(searchQuery, selectedProfile, exaResults);
+          }
+        });
+
       // Run all API calls in parallel with the selected profile
       const promises = [
-        fetch('/api/fetchExaSearch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ searchQuery: selectedProfile.name }),
-        }).then(response => {
-          if (!response.ok) throw new Error('Failed to fetch Exa search results');
-          return response.json();
-        }).then(data => {
-          setExaSearchResults(data.results);
-          console.log('Exa search results loaded:', data.results);
-        })
+        exaResultsPromise
       ];
 
       await Promise.allSettled(promises);
@@ -241,6 +295,22 @@ export default function PersonResearcher() {
             </div>
           ) : (
             <pre className="text-xs">{JSON.stringify(exaSearchResults, null, 2)}</pre>
+          )}
+        </div>
+      )}
+      
+      {(isGenerating || summaryResult) && (
+        <div className="mt-6 p-4 bg-gray-100 rounded overflow-auto max-h-[500px]">
+          <h2 className="text-xl font-semibold mb-2">Summary</h2>
+          {isGenerating ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+              <span className="ml-2">Generating summary...</span>
+            </div>
+          ) : (
+            <div className="prose">
+              {summaryResult}
+            </div>
           )}
         </div>
       )}
