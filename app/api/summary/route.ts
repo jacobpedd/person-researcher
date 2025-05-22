@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     // Generate the summary using OpenAI
     const response = await openai.responses.create({
-      model: "gpt-4.1",
+      model: "gpt-4.1-mini",
       input: prompt
     });
     

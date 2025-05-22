@@ -58,12 +58,12 @@ export default function PersonResearcher() {
       
       // Fetch both LinkedIn and Wikipedia profiles in parallel
       const [linkedInResponse, wikipediaResponse] = await Promise.all([
-        fetch('/api/fetchLinkedInResults', {
+        fetch('/api/linkedInResults', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ searchQuery }),
         }),
-        fetch('/api/fetchWikipedia', {
+        fetch('/api/wikipediaResults', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ searchQuery }),
@@ -129,7 +129,7 @@ export default function PersonResearcher() {
   // Function to fetch Exa search results
   const fetchExaSearchResults = async (query: string) => {
     try {
-      const response = await fetch('/api/fetchExaSearch', {
+      const response = await fetch('/api/exaSearch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchQuery: query }),
