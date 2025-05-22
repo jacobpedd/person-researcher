@@ -6,6 +6,7 @@ import SummaryDisplay from "./summary/SummaryDisplay";
 import FunFactsDisplay, { FunFact } from "./funfacts/FunFactsDisplay";
 import CareerDisplay, { CareerData } from "./career/CareerDisplay";
 import RoastPraiseDisplay from "./roastpraise/RoastPraiseDisplay";
+import SimilarPeopleDisplay from "./similar/SimilarPeopleDisplay";
 import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
@@ -38,6 +39,7 @@ export default function PersonResearcher() {
   const [careerResult, setCareerResult] = useState<CareerData | null>(null);
   const [roastResult, setRoastResult] = useState<string | null>(null);
   const [praiseResult, setPraiseResult] = useState<string | null>(null);
+  const [similarPeopleResult, setSimilarPeopleResult] = useState<ProfileResult[] | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -119,6 +121,7 @@ export default function PersonResearcher() {
     setCareerResult(null);
     setRoastResult(null);
     setPraiseResult(null);
+    setSimilarPeopleResult(null);
     setIsGenerating(false);
     setIsResearching(false);
   };
@@ -132,6 +135,7 @@ export default function PersonResearcher() {
       setCareerResult(null);
       setRoastResult(null);
       setPraiseResult(null);
+      setSimilarPeopleResult(null);
       setExaSearchResults(null);
       setIsGenerating(false);
       setIsResearching(false);
@@ -335,6 +339,30 @@ export default function PersonResearcher() {
     }
   };
 
+  // Function to fetch similar people
+  const fetchSimilarPeople = async (profile: ProfileResult) => {
+    try {
+      const response = await fetch('/api/similar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileUrl: profile.url,
+          profileName: profile.name
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch similar people');
+      
+      const data = await response.json();
+      setSimilarPeopleResult(data.results);
+      console.log('Similar people loaded:', data.results);
+      return data;
+    } catch (error) {
+      console.error('Error fetching similar people:', error);
+      throw error;
+    }
+  };
+
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -358,6 +386,7 @@ export default function PersonResearcher() {
     setCareerResult(null);
     setRoastResult(null);
     setPraiseResult(null);
+    setSimilarPeopleResult(null);
     setExaSearchResults(null);
 
     try {
@@ -379,7 +408,8 @@ export default function PersonResearcher() {
         fetchFunFacts(searchQuery, selectedProfile, exaResults),
         fetchCareer(searchQuery, selectedProfile, exaResults),
         fetchRoast(searchQuery, selectedProfile, exaResults),
-        fetchPraise(searchQuery, selectedProfile, exaResults)
+        fetchPraise(searchQuery, selectedProfile, exaResults),
+        fetchSimilarPeople(selectedProfile)
       ];
       
       // Wait for any parallel promises to complete
@@ -528,6 +558,13 @@ export default function PersonResearcher() {
                 roastContent={roastResult} 
                 praiseContent={praiseResult} 
                 isLoading={isGenerating && roastResult === null && praiseResult === null} 
+              />
+            )}
+
+            {!isResearching && (isGenerating || similarPeopleResult) && (
+              <SimilarPeopleDisplay 
+                similarPeople={similarPeopleResult} 
+                isLoading={isGenerating && similarPeopleResult === null} 
               />
             )}
           </div>
