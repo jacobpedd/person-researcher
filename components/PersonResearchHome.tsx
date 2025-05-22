@@ -297,26 +297,38 @@ export default function PersonResearcher() {
         </div>
       ))}
       
-      {isResearching && (
-        <div className="mt-6 p-4 bg-white rounded shadow-md">
-          <div className="flex items-center">
-            <div className="mr-4">
-              <div className="inline-block animate-spin rounded-full border-4 border-gray-300 border-t-brand-default h-10 w-10"></div>
+      {/* Research section with person's name as header */}
+      {(isResearching || isGenerating || summaryResult) && selectedProfile && (
+        <div className="mt-8">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">
+            {selectedProfile.name}
+            {selectedProfile.headline && (
+              <span className="text-lg font-normal text-gray-600 block mt-1">{selectedProfile.headline}</span>
+            )}
+          </h1>
+          
+          {isResearching && (
+            <div className="mt-4 p-4 bg-white rounded shadow-md">
+              <div className="flex items-center">
+                <div className="mr-4">
+                  <div className="inline-block animate-spin rounded-full border-4 border-gray-300 border-t-brand-default h-10 w-10"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium text-lg">Researching...</h3>
+                  <p className="text-gray-600">Gathering information about {selectedProfile.name}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-medium text-lg">Researching...</h3>
-              <p className="text-gray-600">Gathering information about {selectedProfile?.name}</p>
-            </div>
-          </div>
+          )}
+          
+          {/* Only show SummaryDisplay when not in researching phase */}
+          {!isResearching && (isGenerating || summaryResult) && (
+            <SummaryDisplay 
+              summary={summaryResult} 
+              isLoading={isGenerating} 
+            />
+          )}
         </div>
-      )}
-      
-      {/* Only show SummaryDisplay when not in researching phase */}
-      {!isResearching && (isGenerating || summaryResult) && (
-        <SummaryDisplay 
-          summary={summaryResult} 
-          isLoading={isGenerating} 
-        />
       )}
 
       <div className="flex-grow"></div>
