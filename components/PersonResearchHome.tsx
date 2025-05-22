@@ -28,12 +28,6 @@ export default function PersonResearcher() {
   const [selectedProfile, setSelectedProfile] = useState<ProfileResult | null>(null);
   const [activeTab, setActiveTab] = useState<"linkedin" | "wikipedia">("linkedin");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [exaSearchResults, setExaSearchResults] = useState<SearchResponse<{
-    text: true;
-    type: string;
-    numResults: number;
-    summary: true;
-  }> | null>(null);
   const [summaryResult, setSummaryResult] = useState<string | null>(null);
   const [funFactsResult, setFunFactsResult] = useState<FunFact[] | null>(null);
   const [careerResult, setCareerResult] = useState<CareerData | null>(null);
@@ -110,13 +104,9 @@ export default function PersonResearcher() {
     }
   };
 
-  // Clear search results
-  const clearResults = () => {
-    setLinkedInResults(null);
-    setWikipediaResults(null);
-    setSelectedProfile(null);
+  // Clear research data
+  const clearResearchData = () => {
     setSummaryResult(null);
-    setExaSearchResults(null);
     setFunFactsResult(null);
     setCareerResult(null);
     setRoastResult(null);
@@ -125,20 +115,20 @@ export default function PersonResearcher() {
     setIsGenerating(false);
     setIsResearching(false);
   };
+
+  // Clear search results
+  const clearResults = () => {
+    setLinkedInResults(null);
+    setWikipediaResults(null);
+    setSelectedProfile(null);
+    clearResearchData();
+  };
   
   // Handle profile selection and clear previous research results
   const handleProfileSelect = (profile: ProfileResult) => {
     // If selecting a different profile, clear all research results
     if (selectedProfile?.id !== profile.id) {
-      setSummaryResult(null);
-      setFunFactsResult(null);
-      setCareerResult(null);
-      setRoastResult(null);
-      setPraiseResult(null);
-      setSimilarPeopleResult(null);
-      setExaSearchResults(null);
-      setIsGenerating(false);
-      setIsResearching(false);
+      clearResearchData();
       setErrors({});
     }
     
@@ -157,7 +147,6 @@ export default function PersonResearcher() {
       if (!response.ok) throw new Error('Failed to fetch Exa search results');
       
       const data = await response.json();
-      setExaSearchResults(data.results);
       console.log('Exa search results loaded:', data.results);
       return data.results;
     } catch (error) {
@@ -381,13 +370,7 @@ export default function PersonResearcher() {
     setErrors({});
     
     // Clear all previous research data
-    setSummaryResult(null);
-    setFunFactsResult(null);
-    setCareerResult(null);
-    setRoastResult(null);
-    setPraiseResult(null);
-    setSimilarPeopleResult(null);
-    setExaSearchResults(null);
+    clearResearchData();
 
     try {
       // Fetch Exa search results - this is the "researching" phase
@@ -531,43 +514,45 @@ export default function PersonResearcher() {
             </div>
           )}
           
-          <div className="space-y-8">
-            {!isResearching && (isGenerating || summaryResult) && (
-              <SummaryDisplay 
-                summary={summaryResult} 
-                isLoading={isGenerating && summaryResult === null} 
-              />
-            )}
-            
-            {!isResearching && (isGenerating || funFactsResult) && (
-              <FunFactsDisplay 
-                funFacts={funFactsResult} 
-                isLoading={isGenerating && funFactsResult === null} 
-              />
-            )}
+          {!isResearching && (
+            <div className="space-y-8">
+              {(isGenerating || summaryResult) && (
+                <SummaryDisplay 
+                  summary={summaryResult} 
+                  isLoading={isGenerating && summaryResult === null} 
+                />
+              )}
+              
+              {(isGenerating || funFactsResult) && (
+                <FunFactsDisplay 
+                  funFacts={funFactsResult} 
+                  isLoading={isGenerating && funFactsResult === null} 
+                />
+              )}
 
-            {!isResearching && (isGenerating || careerResult) && (
-              <CareerDisplay 
-                careerData={careerResult} 
-                isLoading={isGenerating && careerResult === null} 
-              />
-            )}
+              {(isGenerating || careerResult) && (
+                <CareerDisplay 
+                  careerData={careerResult} 
+                  isLoading={isGenerating && careerResult === null} 
+                />
+              )}
 
-            {!isResearching && (isGenerating || roastResult || praiseResult) && (
-              <RoastPraiseDisplay 
-                roastContent={roastResult} 
-                praiseContent={praiseResult} 
-                isLoading={isGenerating && roastResult === null && praiseResult === null} 
-              />
-            )}
+              {(isGenerating || roastResult || praiseResult) && (
+                <RoastPraiseDisplay 
+                  roastContent={roastResult} 
+                  praiseContent={praiseResult} 
+                  isLoading={isGenerating && roastResult === null && praiseResult === null} 
+                />
+              )}
 
-            {!isResearching && (isGenerating || similarPeopleResult) && (
-              <SimilarPeopleDisplay 
-                similarPeople={similarPeopleResult} 
-                isLoading={isGenerating && similarPeopleResult === null} 
-              />
-            )}
-          </div>
+              {(isGenerating || similarPeopleResult) && (
+                <SimilarPeopleDisplay 
+                  similarPeople={similarPeopleResult} 
+                  isLoading={isGenerating && similarPeopleResult === null} 
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 
