@@ -3,6 +3,7 @@ import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import ProfileResults from "./profileResults/ProfileResults";
 import SummaryDisplay from "./summary/SummaryDisplay";
+import FunFactsDisplay, { FunFact } from "./funfacts/FunFactsDisplay";
 import type { SearchResponse } from "exa-js";
 
 export interface ProfileResult {
@@ -31,6 +32,7 @@ export default function PersonResearcher() {
     summary: true;
   }> | null>(null);
   const [summaryResult, setSummaryResult] = useState<string | null>(null);
+  const [funFactsResult, setFunFactsResult] = useState<FunFact[] | null>(null);
 
   // Handle form submission for search
   const handleSearchSubmit = (e: FormEvent) => {
@@ -108,6 +110,7 @@ export default function PersonResearcher() {
     setSelectedProfile(null);
     setSummaryResult(null);
     setExaSearchResults(null);
+    setFunFactsResult(null);
     setIsGenerating(false);
     setIsResearching(false);
   };
@@ -117,6 +120,7 @@ export default function PersonResearcher() {
     // If selecting a different profile, clear all research results
     if (selectedProfile?.id !== profile.id) {
       setSummaryResult(null);
+      setFunFactsResult(null);
       setExaSearchResults(null);
       setIsGenerating(false);
       setIsResearching(false);
@@ -180,6 +184,40 @@ export default function PersonResearcher() {
       throw error;
     }
   };
+  
+  // Function to fetch fun facts
+  const fetchFunFacts = async (
+    query: string, 
+    profile: ProfileResult,
+    exaResults: SearchResponse<{
+      text: true;
+      type: string;
+      numResults: number;
+      summary: true;
+    }>
+  ) => {
+    try {
+      const response = await fetch('/api/funFacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: query,
+          profileResult: profile,
+          exaResults: exaResults
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch fun facts');
+      
+      const data = await response.json();
+      setFunFactsResult(data.funFacts);
+      console.log('Fun facts loaded:', data.funFacts);
+      return data;
+    } catch (error) {
+      console.error('Error fetching fun facts:', error);
+      throw error;
+    }
+  };
 
   // Main Research Function
   const handleResearch = async (e: FormEvent) => {
@@ -213,7 +251,8 @@ export default function PersonResearcher() {
       
       // Populate report sections in parallel - this is the "generating" phase
       const promises = [
-        fetchSummary(searchQuery, selectedProfile, exaResults)
+        fetchSummary(searchQuery, selectedProfile, exaResults),
+        fetchFunFacts(searchQuery, selectedProfile, exaResults)
       ];
       
       // Wait for any parallel promises to complete
@@ -337,13 +376,21 @@ export default function PersonResearcher() {
             </div>
           )}
           
-          {/* Only show SummaryDisplay when not in researching phase */}
-          {!isResearching && (isGenerating || summaryResult) && (
-            <SummaryDisplay 
-              summary={summaryResult} 
-              isLoading={isGenerating} 
-            />
-          )}
+          <div className="space-y-8">
+            {!isResearching && (isGenerating || summaryResult) && (
+              <SummaryDisplay 
+                summary={summaryResult} 
+                isLoading={isGenerating} 
+              />
+            )}
+            
+            {!isResearching && (isGenerating || funFactsResult) && (
+              <FunFactsDisplay 
+                funFacts={funFactsResult} 
+                isLoading={isGenerating} 
+              />
+            )}
+          </div>
         </div>
       )}
 
