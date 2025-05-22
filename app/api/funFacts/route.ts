@@ -9,7 +9,7 @@ export const maxDuration = 60;
 // Define Zod schema for a fun fact
 const FunFactSchema = z.object({
   fact: z.string().describe('The interesting fun fact about the person'),
-  source: z.string().optional().describe('The source of this fun fact, if available'),
+  source: z.string().optional().describe('The source of this fun fact (use just the title of the website, e.g. "LinkedIn", "Forbes", "TechCrunch")'),
   sourceUrl: z.string().optional().describe('The URL link to the source, if available')
 });
 
@@ -70,8 +70,14 @@ export async function POST(request: NextRequest) {
       - Focus on quirky hobbies, weird coincidences, unexpected career pivots, or unusual talents
       - Each fact should be ONE short sentence (try to keep it to one line)
       - Use a casual, fun tone - like you're sharing gossip with a friend
+      - Keep each fun fact super short and punchy
       - Prioritize facts from search results over profile information
-      - Include sources and source URLs when possible
+      - Cover different aspects of the person's life (not just work achievements)
+      - Avoid generic information that could apply to many people
+      - Stick to information that's actually in the provided data
+      - For each fact, include a source (just use the website name like "LinkedIn" or "TechCrunch") and source URL when available
+      - Provide your response as a structured object with a 'funFacts' array containing fun facts
+      - Each fun fact should have a 'fact' field and optional 'source' (website name only) and 'sourceUrl' fields
 
       ## Search Query
       ${searchQuery}
@@ -85,24 +91,11 @@ export async function POST(request: NextRequest) {
 
       ## Search Results
       ${JSON.stringify(exaContent, null, 2)}
-
-      ## Guidelines
-      - Keep each fun fact super short and punchy
-      - Focus on what makes them genuinely surprising or memorable
-      - Try to use search result sources for most facts, avoiding profile info when possible
-      - Include sources when possible, along with the source URL when available
-      - Cover different aspects of the person's life (not just work achievements)
-      - Avoid generic information that could apply to many people
-      - Stick to information that's actually in the provided data
-      - Generate 3-5 fun facts
-      
-      ## Output Format
-      Provide your response as a structured object with a 'funFacts' array containing fun facts. Each fun fact should have a 'fact' field and an optional 'source' field.
     `;
 
     // Generate fun facts using OpenAI with structured output
     const response = await openai.responses.parse({
-      model: "gpt-4.1-mini",
+      model: "gpt-4.1",
       input: prompt,
       text: {
         format: zodTextFormat(FunFactsResponseSchema, 'funFacts')
