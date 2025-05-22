@@ -4,6 +4,7 @@ import { Skeleton } from '../ui/skeleton';
 interface SummaryDisplayProps {
   summary: string | null;
   isLoading: boolean;
+  isResearching?: boolean;
 }
 
 const SummarySkeleton = () => (

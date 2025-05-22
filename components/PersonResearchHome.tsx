@@ -16,6 +16,7 @@ export interface ProfileResult {
 
 export default function PersonResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isResearching, setIsResearching] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [linkedInResults, setLinkedInResults] = useState<ProfileResult[] | null>(null);
@@ -178,11 +179,11 @@ export default function PersonResearcher() {
     console.log(`Profile URL: ${selectedProfile.url}`);
     console.log(`Profile source: ${selectedProfile.source}`);
 
-    setIsGenerating(true);
+    setIsResearching(true);
     setErrors({});
 
     try {
-      // Fetch Exa search results
+      // Fetch Exa search results - this is the "researching" phase
       const exaResults = await fetchExaSearchResults(selectedProfile.name);
       
       // Throw error if exaResults is null
@@ -190,9 +191,13 @@ export default function PersonResearcher() {
         throw new Error("Failed to fetch search results");
       }
       
-      // Populate report sections in parallel
+      // Switch from researching to generating state
+      setIsResearching(false);
+      setIsGenerating(true);
+      
+      // Populate report sections in parallel - this is the "generating" phase
       const promises = [
-        await fetchSummary(searchQuery, selectedProfile, exaResults)
+        fetchSummary(searchQuery, selectedProfile, exaResults)
       ];
       
       // Wait for any parallel promises to complete
@@ -204,6 +209,7 @@ export default function PersonResearcher() {
       console.error("Error during research:", error);
       setErrors({ form: "An error occurred during research. Please try again." });
     } finally {
+      setIsResearching(false);
       setIsGenerating(false);
     }
   };
@@ -263,11 +269,11 @@ export default function PersonResearcher() {
             <button
               type="submit"
               className={`w-full text-white font-semibold px-2 py-2 rounded-sm transition-opacity opacity-0 animate-fade-up [animation-delay:800ms] min-h-[50px] ${
-                isGenerating ? 'bg-gray-400' : selectedProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
+                isResearching || isGenerating ? 'bg-gray-400' : selectedProfile ? 'bg-brand-default ring-2 ring-brand-default' : 'bg-gray-400'
               } transition-colors`}
-              disabled={isGenerating || !selectedProfile}
+              disabled={isResearching || isGenerating || !selectedProfile}
             >
-              {isGenerating ? 'Researching...' : 'Research Person'}
+              {isResearching ? 'Researching...' : isGenerating ? 'Generating...' : 'Research Person'}
             </button>
           </form>
         )}
@@ -290,9 +296,23 @@ export default function PersonResearcher() {
           {message}
         </div>
       ))}
-
       
-      {(isGenerating || summaryResult) && (
+      {isResearching && (
+        <div className="mt-6 p-4 bg-white rounded shadow-md">
+          <div className="flex items-center">
+            <div className="mr-4">
+              <div className="inline-block animate-spin rounded-full border-4 border-gray-300 border-t-brand-default h-10 w-10"></div>
+            </div>
+            <div>
+              <h3 className="font-medium text-lg">Researching...</h3>
+              <p className="text-gray-600">Gathering information about {selectedProfile?.name}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Only show SummaryDisplay when not in researching phase */}
+      {!isResearching && (isGenerating || summaryResult) && (
         <SummaryDisplay 
           summary={summaryResult} 
           isLoading={isGenerating} 
