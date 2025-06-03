@@ -44,3 +44,20 @@ export function generateContextPrompt({ searchQuery, profileResult, exaResults }
     `).join('\n\n')}
   `;
 }
+
+export function generateProfilePrompt(profile: ProfileResult): string {
+  // Truncate profile text to 1000 characters to keep prompt manageable
+  const truncatedText = profile.text.length > 1000 
+    ? profile.text.substring(0, 1000) + '...'
+    : profile.text;
+
+  return outdent`
+    Name: ${profile.name}
+    Headline: ${profile.headline}
+    Source: ${profile.source}
+    Profile URL: ${profile.url}
+    
+    Profile Content:
+    ${truncatedText}
+  `;
+}

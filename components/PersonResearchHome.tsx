@@ -176,12 +176,12 @@ export default function PersonResearcher() {
   };
   
   // Function to fetch fun facts
-  const fetchFunFacts = async (contextPrompt: string) => {
+  const fetchFunFacts = async (profile: ProfileResult) => {
     try {
       const response = await fetch('/api/funFacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contextPrompt }),
+        body: JSON.stringify({ selectedProfile: profile }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch fun facts');
@@ -326,7 +326,7 @@ export default function PersonResearcher() {
       // Populate report sections in parallel - this is the "generating" phase
       const promises = [
         fetchSummary(contextPrompt),
-        fetchFunFacts(contextPrompt),
+        fetchFunFacts(selectedProfile),
         fetchCareer(contextPrompt),
         fetchRoast(contextPrompt),
         fetchPraise(contextPrompt),

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
-import { zodTextFormat } from 'openai/helpers/zod';
+import Exa, { ResearchModel } from 'exa-js';
 import { z } from 'zod';
 import outdent from 'outdent';
+import { generateProfilePrompt } from '../../../lib/promptUtils';
 
-export const maxDuration = 60;
+const exa = new Exa(process.env.EXA_API_KEY);
 
 // Define Zod schema for a fun fact
 const FunFactSchema = z.object({
   fact: z.string().describe('The interesting fun fact about the person'),
-  source: z.string().nullable().describe('The source of this fun fact (use just the title of the website, e.g. "LinkedIn", "Forbes", "TechCrunch")'),
-  sourceUrl: z.string().nullable().describe('The URL link to the source, if available')
+  source: z.string().optional().describe('The source of this fun fact (use just the title of the website, e.g. "LinkedIn", "Forbes", "TechCrunch")'),
+  sourceUrl: z.string().optional().describe('The URL link to the source, if available')
 });
 
 // Define Zod schema for the collection of fun facts wrapped in an object
@@ -24,58 +24,68 @@ export async function POST(request: NextRequest) {
     // Parse the request body
     const body = await request.json();
     
-    // Validate that we have contextPrompt
-    const { contextPrompt } = body;
+    // Validate that we have selectedProfile
+    const { selectedProfile } = body;
     
-    if (!contextPrompt) {
+    if (!selectedProfile) {
       return NextResponse.json(
-        { error: "contextPrompt is required" },
+        { error: "selectedProfile is required" },
         { status: 400 }
       );
     }
 
-    // Initialize OpenAI client
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // Generate profile prompt using utility  
+    const profilePrompt = generateProfilePrompt(selectedProfile);
 
-    // Create prompt with all instructions in user message
-    const prompt = outdent`
-      ## Instructions
-      - Generate 3-5 fun facts based on the provided information
-      - Prioritize facts from Exa search results to showcase Exa's capabilities
-      - Avoid only listing career related facts
-      - Look for unique or suprising facts that most people wouldn't know
-      - Try to use different sources for each fact when possible
-      - Avoid overly cringe or cheesy language, minimize exclamation points and cliché phrases
-      - Use a casual and engaging tone like you're writing to go viral on twitter
-      - Each fact should be one short sentence so that it can be read on one line
-      - Stick to information that's actually in the provided data
-      - For each fact, include a source (just use the website name like "LinkedIn" or "TechCrunch") and source URL when available
+    // Log length of profile prompt
+    console.log(`Profile prompt character count: ${profilePrompt.length}`);
 
-      ${contextPrompt}
-    `;
+    const task = await exa.research.createTask({
+      model: ResearchModel.exa_research,
+      instructions: outdent`
+        Research and find 3-5 interesting, unique, and lesser-known fun facts about this person. 
 
-    // Generate fun facts using OpenAI with structured output
-    const response = await openai.responses.parse({
-      model: "gpt-4.1",
-      input: prompt,
-      text: {
-        format: zodTextFormat(FunFactsResponseSchema, 'funFacts')
+        Profile Information:
+        ${profilePrompt}
+
+        Guidelines:
+        - Focus on niche and unique facts that most people wouldn't know
+        - Look for surprising or unusual information about their life, background, hobbies, or lesser-known achievements
+        - Avoid basic career information or well-known facts (those will be covered in other sections)
+        - Use a casual, engaging tone suitable for social media
+        - Each fact should be concise (one sentence that can be read on one line)
+        - Include source information when possible
+        - Avoid overly cringe or cheesy language, minimize exclamation points and cliché phrases
+      `,
+      output: {
+        schema: {
+          type: "object",
+          required: ["funFacts"],
+          properties: {
+            funFacts: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["fact"],
+                properties: {
+                  fact: { type: "string" },
+                  source: { type: "string" },
+                  sourceUrl: { type: "string" }
+                },
+              }
+            }
+          },
+          additionalProperties: false
+        }
       }
     });
 
-    // Extract the typed fun facts from the response
-    const funFactsResponse = response.output_parsed;
+    const result = await exa.research.pollTask(task.id);
 
-    if (!funFactsResponse || !funFactsResponse.funFacts || funFactsResponse.funFacts.length === 0) {
-      return NextResponse.json(
-        { error: "No fun facts generated" },
-        { status: 500 }
-      );
-    }
-    
-    return NextResponse.json({ funFacts: funFactsResponse.funFacts });
+    // Validate the result with Zod
+    const validatedResult = FunFactsResponseSchema.parse(result.data);
+
+    return NextResponse.json(validatedResult);
   } catch (error) {
     console.error('Error generating fun facts:', error);
     return NextResponse.json(
